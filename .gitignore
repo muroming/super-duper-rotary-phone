@@ -1,0 +1,9 @@
+*.npy
+*.npz
+
+*.png
+*.jpg
+*.jpeg
+*.webm
+
+*.pyc
