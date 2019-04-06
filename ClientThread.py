@@ -1,7 +1,10 @@
+import os
+import uuid
 from threading import Thread
 
 token_connections = 3  # How many tries to connect to socket via token
 image_chunk_size = 1024
+cache_folder = "cache"
 
 
 class ClientThread(Thread):
@@ -31,7 +34,7 @@ class ClientThread(Thread):
         print("Connected")
 
         print("Started receiving")
-        with open("test_file.jpg", 'wb') as f:
+        with open(os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4())), 'wb') as f:
             while True:
                 data = self.client_socket.recv(image_chunk_size)
                 print("Data length:", len(data))
