@@ -8,11 +8,12 @@ cache_folder = "cache"
 
 
 class ClientThread(Thread):
-    def __init__(self, server_socket, token, token_size=1024):
+    def __init__(self, server_socket, image_callback, token, token_size=1024):
         Thread.__init__(self)
         self.server_socket = server_socket
         self.expected_token = token
         self.token_size = token_size
+        self.image_callback = image_callback
         self.start()
 
     def run(self):
@@ -34,14 +35,16 @@ class ClientThread(Thread):
         print("Connected")
 
         print("Started receiving")
-        with open(os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4())), 'wb') as f:
-            while True:
-                data = self.client_socket.recv(image_chunk_size)
-                print("Data length:", len(data))
-                if len(data) > 0:
-                    f.write(data)
-                else:
-                    break
+        image = open(os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4())), 'wb')
+        while True:
+            data = self.client_socket.recv(image_chunk_size)
+            print("Data length:", len(data))
+            if len(data) > 0:
+                image.write(data)
+            else:
+                break
+
+        self.image_callback(image)
 
         self.stop_connection()
         print("Done")

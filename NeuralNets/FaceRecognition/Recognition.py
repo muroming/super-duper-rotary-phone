@@ -29,7 +29,7 @@ def extract_face_from_image(image, detection_type=0):
     Params:
         image - RGB 3 dim array
     Output:
-        face encoding: 1-dim array (1, 128)
+        face encoding: 1-dim array (1, 128) or empty if face not found
     """
     encoding = []
     face = face_recognition.face_locations(image, detection_type)
