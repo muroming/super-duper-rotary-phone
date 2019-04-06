@@ -29,16 +29,16 @@ class ClientThread(Thread):
                 return
 
         print("Connected")
-        img_bytes = []
 
         print("Started receiving")
-        while True:
-            data = self.client_socket.recv(image_chunk_size)
-            print("Data length:", data)
-            if len(data) > 0:
-                img_bytes.extend(data)
-            else:
-                break
+        with open("test_file.jpg", 'wb') as f:
+            while True:
+                data = self.client_socket.recv(image_chunk_size)
+                print("Data length:", len(data))
+                if len(data) > 0:
+                    f.write(data)
+                else:
+                    break
 
         self.stop_connection()
         print("Done")

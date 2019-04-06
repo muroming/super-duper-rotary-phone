@@ -1,8 +1,6 @@
 import socket as sk
-from io import BytesIO
 
 from flask import Flask, request
-from PIL import Image
 
 from ClientThread import ClientThread
 from NeuralNets.FaceRecognition.Recognition import extract_face_from_image
