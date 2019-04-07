@@ -12,7 +12,7 @@ class ClientThreadResponse(Enum):
     COUNTINUE_LISTENING = 1
 
 
-def add_user_callback(username, image):
+def add_user_callback(image, username):
     """
     Params:
         image - RGB 3 dim array

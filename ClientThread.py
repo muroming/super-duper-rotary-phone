@@ -2,6 +2,7 @@ import os
 import uuid
 from threading import Thread
 
+import cv2
 from ClientThreadCallbacks import ClientThreadResponse
 
 token_connections = 3  # How many tries to connect to socket via token
@@ -10,12 +11,13 @@ cache_folder = "cache"
 
 
 class ClientThread(Thread):
-    def __init__(self, server_socket, image_callback, token, token_size=1024):
+    def __init__(self, server_socket, image_callback, token, **kwargs):
         Thread.__init__(self)
         self.server_socket = server_socket
         self.expected_token = token
-        self.token_size = token_size
+        self.token_size = len(token)
         self.image_callback = image_callback
+        self.callback_args = kwargs
         self.start()
 
     def run(self):
@@ -47,7 +49,10 @@ class ClientThread(Thread):
                 else:
                     break
 
-            result = self.image_callback("test_user", image)
+            image.close()
+            img = cv2.imread(image.name)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            self.image_callback(img, **self.callback_args)
 
         self.stop_connection()
         print("Done")
