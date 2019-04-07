@@ -8,6 +8,8 @@ import cv2
 
 encodings = []
 names = []
+person_faces_amount = 200
+percentage_to_auhtorize = 0.8
 
 
 def extract_images_from_video(label, video_path, save_path):
@@ -92,7 +94,7 @@ def validate_person(image, detection_type=0):  # Assuming image is RGB
                 name = names[i]
                 counts[name] = counts.get(name, 0) + 1
 
-            if max(counts.values()) >= 50:
+            if max(counts.values()) >= person_faces_amount * percentage_to_auhtorize:
                 name = max(counts, key=counts.get)
 
         ns.append(name)
