@@ -33,7 +33,7 @@ def add_user():
     serversocket.bind((ip_address, image_port))
     serversocket.listen(1)
 
-    connections.add(ClientThread(serversocket, token, add_user_callback, token_size))
+    connections.add(ClientThread(serversocket, add_user_callback, token, token_size))
 
     return "Ok"
 

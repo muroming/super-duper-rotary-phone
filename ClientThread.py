@@ -2,6 +2,8 @@ import os
 import uuid
 from threading import Thread
 
+from ClientThreadCallbacks import ClientThreadResponse
+
 token_connections = 3  # How many tries to connect to socket via token
 image_chunk_size = 1024
 cache_folder = "cache"
@@ -27,7 +29,6 @@ class ClientThread(Thread):
             received_token = self.client_socket.recv(self.token_size).decode()
             connection_tries += 1
 
-            print(received_token)
             is_connected = received_token == self.expected_token
             if connection_tries == token_connections and not is_connected:
                 return
@@ -35,16 +36,18 @@ class ClientThread(Thread):
         print("Connected")
 
         print("Started receiving")
-        image = open(os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4())), 'wb')
-        while True:
-            data = self.client_socket.recv(image_chunk_size)
-            print("Data length:", len(data))
-            if len(data) > 0:
-                image.write(data)
-            else:
-                break
+        result = ClientThreadResponse.COUNTINUE_LISTENING
+        while result == ClientThreadResponse.COUNTINUE_LISTENING:
+            image = open(os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4())), 'wb')
+            while True:
+                data = self.client_socket.recv(image_chunk_size)
+                print("Data length:", len(data))
+                if len(data) > 0:
+                    image.write(data)
+                else:
+                    break
 
-        self.image_callback(image)
+            result = self.image_callback("test_user", image)
 
         self.stop_connection()
         print("Done")
