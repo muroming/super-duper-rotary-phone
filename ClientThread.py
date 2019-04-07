@@ -54,6 +54,8 @@ class ClientThread(Thread):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             self.image_callback(img, **self.callback_args)
 
+            os.remove(image.name)
+
         self.stop_connection()
         print("Done")
 

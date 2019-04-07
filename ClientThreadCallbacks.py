@@ -6,6 +6,8 @@ import numpy as np
 
 from NeuralNets.FaceRecognition.Recognition import extract_face_from_image
 
+cache_folder = "cache"
+
 
 class ClientThreadResponse(Enum):
     CLOSE_SOCKET = 0
@@ -25,7 +27,7 @@ def add_user_callback(image, username):
         return ClientThreadResponse.COUNTINUE_LISTENING
 
     print("Face found!")
-    filename = username + str(uuid.uuid4()) + ".npy"
+    filename = "%s_%s.npy" % (username, str(uuid.uuid4()))
     np.save(os.path.join(cache_folder, filename), encoding)
 
     # TODO: save embeddings if gathered enough faces
