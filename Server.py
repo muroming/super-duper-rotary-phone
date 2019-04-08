@@ -4,6 +4,7 @@ from flask import Flask, request
 
 from ClientThread import ClientThread
 from ClientThreadCallbacks import *
+from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 
 app = Flask(__name__)
 
@@ -35,7 +36,7 @@ def add_user():
 
     connections.add(ClientThread(serversocket, add_user_callback, token, username="test_user"))
 
-    return "Ok"
+    return "%d" % person_faces_amount
 
 
 if __name__ == "__main__":
