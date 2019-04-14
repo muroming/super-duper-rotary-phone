@@ -3,7 +3,7 @@ import uuid
 from threading import Thread
 
 import cv2
-from ClientThreadCallbacks import ClientThreadResponse
+from Client.ClientThreadCallbacks import ClientThreadResponse
 
 token_connections = 3  # How many tries to connect to socket via token
 image_chunk_size = 1024
