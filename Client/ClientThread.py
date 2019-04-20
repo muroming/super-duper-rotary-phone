@@ -11,54 +11,39 @@ cache_folder = "cache"
 
 
 class ClientThread(Thread):
-    def __init__(self, server_socket, image_callback, token, **kwargs):
+    def __init__(self, client_socket, image_callback, **kwargs):
         Thread.__init__(self)
-        self.server_socket = server_socket
-        self.expected_token = token
-        self.token_size = len(token)
+        self.client_socket = client_socket
         self.image_callback = image_callback
         self.callback_args = kwargs
+        self.is_running = False
         self.start()
 
     def run(self):
-        print("Started handler for:", self.server_socket)
-        self.client_socket, address = self.server_socket.accept()
-
-        connection_tries = 0
-        is_connected = False
-        while connection_tries < token_connections and not is_connected:
-            print("Waiting token")
-            received_token = self.client_socket.recv(self.token_size).decode()
-            connection_tries += 1
-
-            is_connected = received_token == self.expected_token
-            if connection_tries == token_connections and not is_connected:
-                return
-
-        print("Connected")
-
+        self.is_running = True
         print("Started receiving")
         result = ClientThreadResponse.COUNTINUE_LISTENING
+        current_file = ""
         while result == ClientThreadResponse.COUNTINUE_LISTENING:
-            image = open(os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4())), 'wb')
+            current_file = os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4()))
+            image = open(current_file, 'wb')
             while True:
                 data = self.client_socket.recv(image_chunk_size)
                 print("Data length:", len(data))
-                if len(data) > 0:
-                    image.write(data)
-                else:
+                image.write(data)
+
+                if len(data) < image_chunk_size:
                     break
 
             image.close()
-            img = cv2.imread(image.name)
+            img = cv2.imread(current_file)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            self.image_callback(img, **self.callback_args)
+            result = self.image_callback(img, **self.callback_args)
 
-            os.remove(image.name)
+            os.remove(current_file)
 
         self.stop_connection()
         print("Done")
 
     def stop_connection(self):
-        self.client_socket.close()
-        self.server_socket.close()
+        self.is_running = False

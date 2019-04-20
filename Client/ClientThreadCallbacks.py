@@ -46,4 +46,4 @@ def add_user_callback(image, username):
         print("Person saved!")
         return ClientThreadResponse.CLOSE_SOCKET
 
-    return ClientThreadResponse.COUNTINUE_LISTENING
+    return ClientThreadResponse.CLOSE_SOCKET
