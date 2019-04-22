@@ -1,10 +1,10 @@
 import os
 
-import face_recognition
-import matplotlib.pyplot as plt
-import numpy as np
-
-import cv2
+# import face_recognition
+# import matplotlib.pyplot as plt
+# import numpy as np
+#
+# import cv2
 
 encodings = []
 names = []

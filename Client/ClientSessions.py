@@ -3,10 +3,8 @@ import pickle
 
 from Client import Client
 
-USER_DATA_DIR = "UserData"
-USER_NAMES = "names.pickle"
-USER_LOGINS = "login.pickle"
-USER_PASSWORDS = "passwords.pickle"
+USER_DATA_DIR = os.path.join("", "UserData")
+USERS = "users.pickle"
 
 users = []
 authenticated_users = []
@@ -33,19 +31,24 @@ def logout_user(login, password):
 def create_user(name, login, password):
     user = Client.create_user(name, login, password)
     users.append(user)
+    dump_database()
 
     return user
 
 
-if len(os.listdir(os.path.join("Client", USER_DATA_DIR))) != 0:
-    logins = open(os.path.join(USER_DATA_DIR, USER_LOGINS), "rb")
-    logins = pickle.load(logins)
+def dump_database():
+    print(os.listdir('./'))
+    users_file = open(os.path.join(USER_DATA_DIR, USERS), "wb")
+    pickle.dump(users, users_file)
 
-    passwords = open(os.path.join(USER_DATA_DIR, USER_PASSWORDS), "rb")
-    passwords = pickle.load(passwords)
 
-    names = open(os.path.join(USER_DATA_DIR, USER_NAMES), "rb")
-    names = pickle.load(names)
+def load_users():
+    global users
+    if os.path.exists(USER_DATA_DIR) and os.path.exists(os.path.join(USER_DATA_DIR, USERS)) != 0:
+        users_file = open(os.path.join(USER_DATA_DIR, USERS), "rb")
+        users = pickle.load(users_file)
 
-    for name, login, password in zip(names, logins, passwords):
-        users.append(Client.Client(name, login, password))
+        for user in users:
+            users.append(Client.Client(**user))
+
+        print(users)

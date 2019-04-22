@@ -2,7 +2,7 @@ import os
 import uuid
 from threading import Thread
 
-import cv2
+# import cv2
 from Client.ClientThreadCallbacks import ClientThreadResponse
 
 token_connections = 3  # How many tries to connect to socket via token
@@ -25,7 +25,8 @@ class ClientThread(Thread):
         result = ClientThreadResponse.COUNTINUE_LISTENING
         current_file = ""
         while result == ClientThreadResponse.COUNTINUE_LISTENING:
-            current_file = os.path.join(cache_folder, "%s.jpg" % str(uuid.uuid4()))
+            current_file = os.path.join(
+                cache_folder, "%s.jpg" % str(uuid.uuid4()))
             image = open(current_file, 'wb')
             while True:
                 data = self.client_socket.recv(image_chunk_size)

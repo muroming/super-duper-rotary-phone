@@ -15,7 +15,7 @@ class ClientThreadResponse(Enum):
     COUNTINUE_LISTENING = 1
 
 
-def add_user_callback(image, username):
+def add_user_photo_callback(image, username):
     """
     Params:
         image - RGB 3 dim array
@@ -31,7 +31,8 @@ def add_user_callback(image, username):
     filename = "%s_%s.npy" % (username, str(uuid.uuid4()))
     np.save(os.path.join(cache_folder, filename), encoding)
 
-    user_faces = list(filter(lambda x: username in x, os.listdir(cache_folder)))
+    user_faces = list(
+        filter(lambda x: username in x, os.listdir(cache_folder)))
     if len(user_faces) == person_faces_amount:
         user_dataset = []
         for user_face in user_faces:
