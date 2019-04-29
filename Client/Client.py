@@ -10,6 +10,7 @@ class Client():
         self.password = password
 
     def authorize(self, login, password):
+        print(self.login, self.password)
         return crypt.crypt(login, SALT) == self.login and crypt.crypt(password, SALT) == self.password
 
 

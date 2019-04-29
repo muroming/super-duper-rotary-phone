@@ -3,7 +3,7 @@ import pickle
 
 from Client import Client
 
-USER_DATA_DIR = os.path.join("", "UserData")
+USER_DATA_DIR = os.path.join("Client", "UserData")
 USERS = "users.pickle"
 
 users = []
@@ -45,10 +45,9 @@ def dump_database():
 def load_users():
     global users
     if os.path.exists(USER_DATA_DIR) and os.path.exists(os.path.join(USER_DATA_DIR, USERS)) != 0:
+        print("Loading users")
         users_file = open(os.path.join(USER_DATA_DIR, USERS), "rb")
+        print("Opened file")
         users = pickle.load(users_file)
-
-        for user in users:
-            users.append(Client.Client(**user))
 
         print(users)
