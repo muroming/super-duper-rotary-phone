@@ -24,8 +24,8 @@ def send_pic_test(s):
         bytes = f.read()
         current_chunk = 0
         while current_chunk < len(bytes) // image_chunk_size:
-            data = bytes[current_chunk *
-                         image_chunk_size:(current_chunk + 1) * image_chunk_size]
+            data = bytes[current_chunk
+                         * image_chunk_size:(current_chunk + 1) * image_chunk_size]
             print("Bytes sent:", len(bytes))
             s.send(data)
             current_chunk += 1
@@ -36,7 +36,26 @@ def send_pic_test(s):
         s.send(data)
 
 
+def authorize_user_test(s):
+    s.send(b"3")
+    with open('me.jpg', 'rb') as f:
+        bytes = f.read()
+        current_chunk = 0
+        while current_chunk < len(bytes) // image_chunk_size:
+            data = bytes[current_chunk
+                         * image_chunk_size:(current_chunk + 1) * image_chunk_size]
+            print("Bytes sent:", len(bytes))
+            s.send(data)
+            current_chunk += 1
+
+        print("Last chunk")
+        data = bytes[current_chunk * image_chunk_size:]
+        print("Bytes sent:", len(bytes))
+        s.send(data)
+    print(s.recv(1024).decode())
+
+
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 s.connect(("127.0.0.1", 3456))
 
-login_user_test(s)
+authorize_user_test(s)

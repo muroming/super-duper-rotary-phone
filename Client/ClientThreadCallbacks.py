@@ -15,7 +15,13 @@ class ClientThreadResponse(Enum):
     COUNTINUE_LISTENING = 1
 
 
-def add_user_photo_callback(image, username):
+def authorize_user(image, socket):
+    name = validate_person(image)
+    socket.send(name.encode())
+    return ClientThreadResponse.CLOSE_SOCKET if name != "unknown" else ClientThreadResponse.COUNTINUE_LISTENING
+
+
+def add_user_photo_callback(image, socket, username):
     """
     Params:
         image - RGB 3 dim array

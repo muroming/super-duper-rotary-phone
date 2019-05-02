@@ -1,4 +1,5 @@
 import os
+import random
 
 # import face_recognition
 # import matplotlib.pyplot as plt
@@ -75,37 +76,43 @@ def load_encodings(path):
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
-    if len(encodings) == 0:
-        raise RuntimeError("No encodings loaded")
+    # if len(encodings) == 0:
+    #     raise RuntimeError("No encodings loaded")
+    #
+    # faces = face_recognition.face_locations(image, detection_type)
+    # encoding = face_recognition.face_encodings(image, faces)
+    #
+    # ns = {}
+    # name = "unknown"
+    # for enc in encoding:
+    #     matches = face_recognition.compare_faces(encodings, enc)
+    #
+    #     if np.any(matches):
+    #         matchedIdxs = [i for (i, b) in enumerate(matches) if b]
+    #         counts = {}
+    #
+    #         for i in matchedIdxs:
+    #             name = names[i]
+    #             counts[name] = counts.get(name, 0) + 1
+    #
+    #         score = -1
+    #         if max(counts.values()) >= person_faces_amount * percentage_to_auhtorize:
+    #             name = max(counts, key=counts.get)
+    #             score = counts[name]
+    #
+    #     ns[name] = score
 
-    faces = face_recognition.face_locations(image, detection_type)
-    encoding = face_recognition.face_encodings(image, faces)
+    # return max(ns, key=ns.get)
 
-    ns = []
-    name = "unknown"
-    for enc in encoding:
-        matches = face_recognition.compare_faces(encodings, enc)
+    return "Nikita" if bool(random.randint(0, 2)) else "unknown"
 
-        if np.any(matches):
-            matchedIdxs = [i for (i, b) in enumerate(matches) if b]
-            counts = {}
-
-            for i in matchedIdxs:
-                name = names[i]
-                counts[name] = counts.get(name, 0) + 1
-
-            if max(counts.values()) >= person_faces_amount * percentage_to_auhtorize:
-                name = max(counts, key=counts.get)
-
-        ns.append(name)
-
-    for ((top, right, bottom, left), name) in zip(faces, ns):
-        cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
-        y = top - 15 if top - 15 > 15 else top + 15
-        cv2.putText(image, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-                    0.75, (0, 255, 0), 2)
-
-    return image
+    # for ((top, right, bottom, left), name) in zip(faces, ns):
+    #     cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
+    #     y = top - 15 if top - 15 > 15 else top + 15
+    #     cv2.putText(image, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
+    #                 0.75, (0, 255, 0), 2)
+    #
+    # return image
 
 # load_encodings('./encodings')
 # print("D")

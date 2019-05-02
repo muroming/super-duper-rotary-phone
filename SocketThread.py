@@ -31,16 +31,32 @@ def create_user(client_socket):
         b"Successful" if user is not None else b"Something went wrong")
 
 
+def logout_user(client_socket):
+    print("Login out user")
+    user_data = client_socket.recv(1024).decode()
+    print(user_data)
+    user_login, user_password = user_data.split(" ")
+    user = ClientSessions.logout_user(user_login, user_password)
+
+    client_socket.send(
+        b"Successful" if user is not None else b"Something went wrong")
+
+
+def validate_user(client_socket):
+    print("Validating user")
+    return ClientThread(client_socket, ClientThreadCallbacks.authorize_user)
+
+
 # Actions
 actions = {
     # LOGIN_USER
     "0": login_user,
     # LOGOUT_USER
-    "1": None,
+    "1": logout_user,
     # CREATE_USER
     "2": create_user,
     # AUTHORIZE
-    "3": None,
+    "3": validate_user,
     # ADD_USER_PHOTOS
     "4": add_photos
 }
@@ -56,7 +72,7 @@ class SocketThread(Thread):
 
     def run(self):
         action = self.client_socket.recv(1).decode()
-        print(action)
+        print(action, actions[action])
         self.thread = actions[action](self.client_socket)
 
     def stop_connection(self):

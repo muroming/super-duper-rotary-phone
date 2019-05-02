@@ -22,9 +22,9 @@ class ClientThread(Thread):
     def run(self):
         self.is_running = True
         print("Started receiving")
-        result = ClientThreadResponse.COUNTINUE_LISTENING
+        socket_status = ClientThreadResponse.COUNTINUE_LISTENING
         current_file = ""
-        while result == ClientThreadResponse.COUNTINUE_LISTENING:
+        while socket_status == ClientThreadResponse.COUNTINUE_LISTENING:
             current_file = os.path.join(
                 cache_folder, "%s.jpg" % str(uuid.uuid4()))
             image = open(current_file, 'wb')
@@ -39,7 +39,8 @@ class ClientThread(Thread):
             image.close()
             img = cv2.imread(current_file)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            result = self.image_callback(img, **self.callback_args)
+            socket_status = self.image_callback(
+                img, self.client_socket, **self.callback_args)
 
             os.remove(current_file)
 
