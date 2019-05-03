@@ -25,8 +25,9 @@ class ClientThread(Thread):
         socket_status = ClientThreadResponse.COUNTINUE_LISTENING
         current_file = ""
         while socket_status == ClientThreadResponse.COUNTINUE_LISTENING:
-            current_file = os.path.join(
-                cache_folder, "%s.jpg" % str(uuid.uuid4()))
+            print("New file")
+            current_file = os.path.join(".",
+                                        cache_folder, "%s.jpg" % str(uuid.uuid4()))
             image = open(current_file, 'wb')
             while True:
                 data = self.client_socket.recv(image_chunk_size)
