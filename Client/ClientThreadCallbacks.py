@@ -17,8 +17,14 @@ class ClientThreadResponse(Enum):
 
 def authorize_user(image, socket):
     name = validate_person(image)
+    if name == "unknown" or len(name) == 0:
+        name = "UNF"  # User Not Found
+        result = ClientThreadResponse.COUNTINUE_LISTENING
+    else:
+        result = ClientThreadResponse.CLOSE_SOCKET
+    print("Authorized user:", name)
     socket.send(name.encode())
-    return ClientThreadResponse.CLOSE_SOCKET if name != "unknown" else ClientThreadResponse.COUNTINUE_LISTENING
+    return result
 
 
 def add_user_photo_callback(image, socket, username):

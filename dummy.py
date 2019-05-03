@@ -1,6 +1,8 @@
+import os
 import socket as sk
-import urllib.request as req
+import uuid
 
+import cv2
 from Client.ClientThread import image_chunk_size
 
 
@@ -24,8 +26,8 @@ def send_pic_test(s):
         bytes = f.read()
         current_chunk = 0
         while current_chunk < len(bytes) // image_chunk_size:
-            data = bytes[current_chunk
-                         * image_chunk_size:(current_chunk + 1) * image_chunk_size]
+            data = bytes[current_chunk *
+                         image_chunk_size:(current_chunk + 1) * image_chunk_size]
             print("Bytes sent:", len(bytes))
             s.send(data)
             current_chunk += 1
@@ -38,21 +40,35 @@ def send_pic_test(s):
 
 def authorize_user_test(s):
     s.send(b"3")
-    with open('me.jpg', 'rb') as f:
-        bytes = f.read()
-        current_chunk = 0
-        while current_chunk < len(bytes) // image_chunk_size:
-            data = bytes[current_chunk
-                         * image_chunk_size:(current_chunk + 1) * image_chunk_size]
+    cap = cv2.VideoCapture(0)
+    response = "UNF"
+    while response == "UNF":
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+
+        filename = './cache/%s.jpg' % str(uuid.uuid4())
+        cv2.imwrite(filename, frame)
+        with open(filename, 'rb') as f:
+            bytes = f.read()
+            current_chunk = 0
+            while current_chunk < len(bytes) // image_chunk_size:
+                data = bytes[current_chunk *
+                             image_chunk_size:(current_chunk + 1) * image_chunk_size]
+                print("Bytes sent:", len(bytes))
+                s.send(data)
+                current_chunk += 1
+
+            print("Last chunk")
+            data = bytes[current_chunk * image_chunk_size:]
             print("Bytes sent:", len(bytes))
             s.send(data)
-            current_chunk += 1
 
-        print("Last chunk")
-        data = bytes[current_chunk * image_chunk_size:]
-        print("Bytes sent:", len(bytes))
-        s.send(data)
-    print(s.recv(1024).decode())
+        os.remove(filename)
+        response = s.recv(1024).decode()
+
+    # When everything done, release the capture
+    cap.release()
+    cv2.destroyAllWindows()
 
 
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)

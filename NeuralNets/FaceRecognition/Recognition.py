@@ -1,11 +1,11 @@
 import os
 import random
 
-# import face_recognition
-# import matplotlib.pyplot as plt
-# import numpy as np
-#
-# import cv2
+import face_recognition
+import matplotlib.pyplot as plt
+import numpy as np
+
+import cv2
 
 encodings = []
 names = []
@@ -67,8 +67,8 @@ def add_person(label, dataset_path, detection_type=0):
 def load_encodings(path):
     global encodings
     global names
-    for path in os.listdir('./encodings'):
-        enc = np.load(os.path.join('./encodings', path))
+    for file in os.listdir(path):
+        enc = np.load(os.path.join(path, file))
         name = path.split('.')[0]
         for e in enc:
             encodings.append(e)
@@ -76,35 +76,35 @@ def load_encodings(path):
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
-    # if len(encodings) == 0:
-    #     raise RuntimeError("No encodings loaded")
-    #
-    # faces = face_recognition.face_locations(image, detection_type)
-    # encoding = face_recognition.face_encodings(image, faces)
-    #
-    # ns = {}
-    # name = "unknown"
-    # for enc in encoding:
-    #     matches = face_recognition.compare_faces(encodings, enc)
-    #
-    #     if np.any(matches):
-    #         matchedIdxs = [i for (i, b) in enumerate(matches) if b]
-    #         counts = {}
-    #
-    #         for i in matchedIdxs:
-    #             name = names[i]
-    #             counts[name] = counts.get(name, 0) + 1
-    #
-    #         score = -1
-    #         if max(counts.values()) >= person_faces_amount * percentage_to_auhtorize:
-    #             name = max(counts, key=counts.get)
-    #             score = counts[name]
-    #
-    #     ns[name] = score
+    if len(encodings) == 0:
+        raise RuntimeError("No encodings loaded")
 
-    # return max(ns, key=ns.get)
+    faces = face_recognition.face_locations(image, detection_type)
+    encoding = face_recognition.face_encodings(image, faces)
 
-    return "Nikita" if bool(random.randint(0, 2)) else "unknown"
+    ns = {}
+    name = "unknown"
+    for enc in encoding:
+        matches = face_recognition.compare_faces(encodings, enc)
+
+        if np.any(matches):
+            matchedIdxs = [i for (i, b) in enumerate(matches) if b]
+            counts = {}
+
+            for i in matchedIdxs:
+                name = names[i]
+                counts[name] = counts.get(name, 0) + 1
+
+            score = -1
+            if max(counts.values()) >= person_faces_amount * percentage_to_auhtorize:
+                name = max(counts, key=counts.get)
+                score = counts[name]
+
+        ns[name] = score
+
+    return max(ns, key=ns.get)
+
+    # return "Nikita" if bool(random.randint(0, 2)) else "unknown"
 
     # for ((top, right, bottom, left), name) in zip(faces, ns):
     #     cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
@@ -114,7 +114,8 @@ def validate_person(image, detection_type=0):  # Assuming image is RGB
     #
     # return image
 
-# load_encodings('./encodings')
+
+load_encodings('./NeuralNets/FaceRecognition/encodings')
 # print("D")
 #
 # cap = cv2.VideoCapture(0)
