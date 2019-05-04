@@ -47,7 +47,7 @@ def load_users():
     if os.path.exists(USER_DATA_DIR) and os.path.exists(os.path.join(USER_DATA_DIR, USERS)) != 0:
         print("Loading users")
         users_file = open(os.path.join(USER_DATA_DIR, USERS), "rb")
-        print("Opened file")
+        print("Opened users file")
         users = pickle.load(users_file)
 
-        print(users)
+        print("Loaded", len(users), "users")

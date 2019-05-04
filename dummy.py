@@ -4,24 +4,26 @@ import uuid
 
 import cv2
 from Client.ClientThread import image_chunk_size
+from Client.ClientThreadCallbacks import trash_symbol
 
 
 def login_user_test(s):
     s.send(b"0")
-    s.send(b"testuser testpassword")
+    s.send(fill_string("testuser testpassword", 1024).encode())
     print("All sent")
     print(s.recv(1024).decode())
 
 
 def create_user_test(s):
     s.send(b"2")
-    s.send(b"testname testuser testpassword")
+    s.send(fill_string("testname testuser testpassword", 1024).encode())
     print("All sent")
     print(s.recv(1024).decode())
 
 
 def send_pic_test(s):
     s.send(b"4")
+    s.send(fill_string("testuser", 1024).encode())
     with open('me.jpg', 'rb') as f:
         bytes = f.read()
         current_chunk = 0
@@ -71,7 +73,11 @@ def authorize_user_test(s):
     cv2.destroyAllWindows()
 
 
+def fill_string(data, length):
+    return data + "^" * (length - len(data))
+
+
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 s.connect(("127.0.0.1", 3456))
 
-authorize_user_test(s)
+send_pic_test(s)

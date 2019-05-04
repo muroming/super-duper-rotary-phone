@@ -5,13 +5,14 @@ from Client.ClientThread import ClientThread
 
 
 def add_photos(client_socket):
-    print("Adding photos")
-    return ClientThread(client_socket, ClientThreadCallbacks.add_user_photo_callback, username="test_user")
+    username = remove_string_fillers(client_socket.recv(1024).decode())
+    print("Adding photos for user:", username)
+    return ClientThread(client_socket, ClientThreadCallbacks.add_user_photo_callback, username=username)
 
 
 def login_user(client_socket):
     print("Logining user")
-    user_data = client_socket.recv(1024).decode()
+    user_data = remove_string_fillers(client_socket.recv(1024).decode())
     print(user_data)
     user_login, user_password = user_data.split(" ")
     user = ClientSessions.login_user(user_login, user_password)
@@ -22,8 +23,8 @@ def login_user(client_socket):
 
 def create_user(client_socket):
     print("Creating user")
-    user_data = client_socket.recv(1024).decode()
-    print(user_data)
+    user_data = remove_string_fillers(client_socket.recv(1024).decode())
+    print(user_data).decode()
     user_name, user_login, user_password = user_data.split(" ")
     user = ClientSessions.create_user(user_name, user_login, user_password)
 
@@ -33,7 +34,7 @@ def create_user(client_socket):
 
 def logout_user(client_socket):
     print("Login out user")
-    user_data = client_socket.recv(1024).decode()
+    user_data = remove_string_fillers(client_socket.recv(1024).decode())
     print(user_data)
     user_login, user_password = user_data.split(" ")
     user = ClientSessions.logout_user(user_login, user_password)
@@ -45,6 +46,10 @@ def logout_user(client_socket):
 def validate_user(client_socket):
     print("Validating user")
     return ClientThread(client_socket, ClientThreadCallbacks.authorize_user)
+
+
+def remove_string_fillers(string):
+    return str(string).replace(ClientThreadCallbacks.trash_symbol, "")
 
 
 # Actions

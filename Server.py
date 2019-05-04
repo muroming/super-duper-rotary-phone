@@ -26,16 +26,3 @@ print("Server started")
 while True:
     client_socket, address = serversocket.accept()
     connections.add(SocketThread(client_socket, address))
-
-
-@app.route("/register_user")
-def register_user():
-    user_name = request.args.get(QUSER_NAME)
-    user_login = request.args.get(QUSER_LOGIN)
-    user_password = request.args.get(QUSER_PASSWORD)
-
-    print(user_name, user_login, user_password)
-
-    user = ClientSessions.create_user(user_name, user_login, user_password)
-
-    return json.dump(user, default=lambda x: x.__dict__)
