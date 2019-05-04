@@ -32,7 +32,8 @@ class ClientThread(Thread):
             while True:
                 data = self.client_socket.recv(image_chunk_size)
                 print("Data length:", len(data))
-                image.write(data)
+                if len(data) > 0:
+                    image.write(data)
 
                 if len(data) < image_chunk_size:
                     break
@@ -42,7 +43,7 @@ class ClientThread(Thread):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             socket_status = self.image_callback(
                 img, self.client_socket, **self.callback_args)
-
+            print(socket_status)
             os.remove(current_file)
 
         self.stop_connection()

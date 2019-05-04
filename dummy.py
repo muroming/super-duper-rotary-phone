@@ -24,22 +24,27 @@ def create_user_test(s):
 def send_pic_test(s):
     s.send(b"4")
     s.send(fill_string("testuser", 1024).encode())
-    print("Faces requiered:", s.recv(3).decode())
-    with open('me.jpg', 'rb') as f:
-        bytes = f.read()
-        current_chunk = 0
-        while current_chunk < len(bytes) // image_chunk_size:
-            data = bytes[current_chunk *
-                         image_chunk_size:(current_chunk + 1) * image_chunk_size]
+    faces = int(s.recv(3).decode())
+    print("Faces requiered:", faces)
+    for _ in range(2):
+        with open('me.jpg', 'rb') as f:
+            bytes = f.read()
+            current_chunk = 0
+            while current_chunk < len(bytes) // image_chunk_size:
+                data = bytes[current_chunk
+                             * image_chunk_size:(current_chunk + 1) * image_chunk_size]
+                print("Bytes sent:", len(bytes))
+                s.send(data)
+                current_chunk += 1
+
+            print("Last chunk")
+            data = bytes[current_chunk * image_chunk_size:]
             print("Bytes sent:", len(bytes))
             s.send(data)
-            current_chunk += 1
-
-        print("Last chunk")
-        data = bytes[current_chunk * image_chunk_size:]
-        print("Bytes sent:", len(bytes))
-        s.send(data)
-    print(s.recv(2).decode())
+        response = s.recv(2).decode()
+        if response == "OK":
+            faces -= 1
+        print("Faces left:", faces)
 
 
 def authorize_user_test(s):
@@ -56,8 +61,8 @@ def authorize_user_test(s):
             bytes = f.read()
             current_chunk = 0
             while current_chunk < len(bytes) // image_chunk_size:
-                data = bytes[current_chunk *
-                             image_chunk_size:(current_chunk + 1) * image_chunk_size]
+                data = bytes[current_chunk
+                             * image_chunk_size:(current_chunk + 1) * image_chunk_size]
                 print("Bytes sent:", len(bytes))
                 s.send(data)
                 current_chunk += 1

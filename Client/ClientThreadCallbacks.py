@@ -48,24 +48,18 @@ def add_user_photo_callback(image, socket, username):
     print("Face found!")
     socket.send(b"OK")  # Face found
 
-    faces_path = os.path.join(cache_folder, "%s_faces.npy")
+    faces_path = os.path.join(cache_folder, "%s_faces.npy" % username)
     if os.path.exists(faces_path):
         user_faces = np.load(faces_path)  # Collect how many faces user has
+        user_faces = np.vstack((user_faces, encoding))
+        print("Currect amount of faces for user", username, "%d/%d" %
+              (user_faces.shape[0], Recognition.person_faces_amount))
+        np.save(faces_path, user_faces)
+
         if len(user_faces) == Recognition.person_faces_amount:
-            user_dataset = []
-            for user_face in user_faces:
-                user_dataset.append(np.load(os.path.join(cache_folder, user_face)))
-
-            user_dataset_np = np.vstack(user_dataset)
-            np.save(os.path.join(dataset_folder, username), user_dataset_np)
-
-            for user_face in user_faces:
-                os.remove(os.path.join(cache_folder, user_face))
-
             print("Person saved!")
             return ClientThreadResponse.CLOSE_SOCKET
-
-        return ClientThreadResponse.CLOSE_SOCKET
     else:
         np.save(faces_path, encoding)
-        return ClientThreadResponse.COUNTINUE_LISTENING
+
+    return ClientThreadResponse.COUNTINUE_LISTENING
