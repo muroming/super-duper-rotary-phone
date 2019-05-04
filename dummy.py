@@ -24,6 +24,7 @@ def create_user_test(s):
 def send_pic_test(s):
     s.send(b"4")
     s.send(fill_string("testuser", 1024).encode())
+    print("Faces requiered:", s.recv(3).decode())
     with open('me.jpg', 'rb') as f:
         bytes = f.read()
         current_chunk = 0
@@ -38,6 +39,7 @@ def send_pic_test(s):
         data = bytes[current_chunk * image_chunk_size:]
         print("Bytes sent:", len(bytes))
         s.send(data)
+    print(s.recv(2).decode())
 
 
 def authorize_user_test(s):

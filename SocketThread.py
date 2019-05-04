@@ -2,11 +2,14 @@ from threading import Thread
 
 from Client import ClientSessions, ClientThreadCallbacks
 from Client.ClientThread import ClientThread
+from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 
 
 def add_photos(client_socket):
     username = remove_string_fillers(client_socket.recv(1024).decode())
     print("Adding photos for user:", username)
+    print("Sending total photos requiered:", person_faces_amount)
+    client_socket.send(str(person_faces_amount).encode())
     return ClientThread(client_socket, ClientThreadCallbacks.add_user_photo_callback, username=username)
 
 
