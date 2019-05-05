@@ -9,7 +9,7 @@ from Database import Database
 from NeuralNets.FaceRecognition import Recognition
 
 cache_folder = "cache"
-dataset_folder = "./NeuralNets/FaceRecognition/encodings"
+dataset_folder = "NeuralNets/FaceRecognition/encodings"
 trash_symbol = "^"
 
 
@@ -57,6 +57,8 @@ def add_user_photo_callback(image, socket, username):
         np.save(faces_path, user_faces)
 
         if len(user_faces) == Recognition.person_faces_amount:
+            os.remove(faces_path)
+            np.save(os.path.join(dataset_folder, "%s.npy" % username), user_faces)
             print("Person saved!")
             return ClientThreadResponse.CLOSE_SOCKET
     else:

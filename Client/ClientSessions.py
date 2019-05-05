@@ -1,22 +1,20 @@
 import os
 import pickle
 
-from Client import Client
+from Database import Database
 
-USER_DATA_DIR = os.path.join("Client", "UserData")
+USER_DATA_DIR = os.path.join("Client", "UserData", "Authentication")
 USERS = "users.pickle"
 
-users = []
 authenticated_users = []
 
 
 def login_user(login, password):
-    for user in users:
-        if user.authorize(login, password):
-            authenticated_users.append(user)
-            return user
+    user = Database.login_user(login, password)
+    if user is not None:
+        authenticated_users.append(user)
 
-    return None
+    return user
 
 
 def logout_user(login, password):
@@ -29,25 +27,6 @@ def logout_user(login, password):
 
 
 def create_user(name, login, password):
-    user = Client.create_user(name, login, password)
-    users.append(user)
-    dump_database()
+    user = Database.save_user(name, login, password)
 
     return user
-
-
-def dump_database():
-    print(os.listdir('./'))
-    users_file = open(os.path.join(USER_DATA_DIR, USERS), "wb")
-    pickle.dump(users, users_file)
-
-
-def load_users():
-    global users
-    if os.path.exists(USER_DATA_DIR) and os.path.exists(os.path.join(USER_DATA_DIR, USERS)) != 0:
-        print("Loading users")
-        users_file = open(os.path.join(USER_DATA_DIR, USERS), "rb")
-        print("Opened users file")
-        users = pickle.load(users_file)
-
-        print("Loaded", len(users), "users")

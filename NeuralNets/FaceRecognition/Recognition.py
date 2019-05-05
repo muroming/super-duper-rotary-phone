@@ -9,7 +9,7 @@ import cv2
 
 encodings = []
 names = []
-person_faces_amount = 200
+person_faces_amount = 2
 percentage_to_auhtorize = 0.8
 
 
