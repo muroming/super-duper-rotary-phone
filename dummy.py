@@ -15,7 +15,7 @@ def login_user_test(s):
 
 
 def create_user_test(s):
-    s.send(b"2")
+    s.send(fill_string("2", 1024).encode())
     s.send(fill_string("testname testuser testpassword", 1024).encode())
     print("All sent")
     print(s.recv(1024).decode())
@@ -87,4 +87,4 @@ def fill_string(data, length):
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 s.connect(("127.0.0.1", 3456))
 
-send_pic_test(s)
+create_user_test(s)

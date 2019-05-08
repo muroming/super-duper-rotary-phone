@@ -1,3 +1,4 @@
+import time
 from threading import Thread
 
 from Client import ClientSessions, ClientThreadCallbacks
@@ -19,20 +20,16 @@ def login_user(client_socket):
     print(user_data)
     user_login, user_password = user_data.split(" ")
     user = ClientSessions.login_user(user_login, user_password)
-
-    client_socket.send(
-        b"Successful" if user is not None else b"User not found")
+    client_socket.send(b"Successful" if user is not None else b"User not found")
 
 
 def create_user(client_socket):
     print("Creating user")
     user_data = remove_string_fillers(client_socket.recv(1024).decode())
-    print(user_data).decode()
+    print(user_data)
     user_name, user_login, user_password = user_data.split(" ")
     user = ClientSessions.create_user(user_name, user_login, user_password)
-
-    client_socket.send(
-        b"Successful" if user is not None else b"Something went wrong")
+    client_socket.send(b"Successful" if user is not None else b"Something went wrong")
 
 
 def logout_user(client_socket):
@@ -41,9 +38,7 @@ def logout_user(client_socket):
     print(user_data)
     user_login, user_password = user_data.split(" ")
     user = ClientSessions.logout_user(user_login, user_password)
-
-    client_socket.send(
-        b"Successful" if user is not None else b"Something went wrong")
+    client_socket.send(b"Successful" if user is not None else b"Something went wrong")
 
 
 def validate_user(client_socket):
@@ -79,11 +74,7 @@ class SocketThread(Thread):
         self.start()
 
     def run(self):
-        action = self.client_socket.recv(1).decode()
+        action = remove_string_fillers(self.client_socket.recv(1024).decode())
         print(action, actions[action])
         self.thread = actions[action](self.client_socket)
-
-    def stop_connection(self):
-        self.client_socket.close()
-        if self.thread is not None:
-            self.thread.stop_connection()
+        print("Socket thread done")

@@ -16,11 +16,9 @@ class ClientThread(Thread):
         self.client_socket = client_socket
         self.image_callback = image_callback
         self.callback_args = kwargs
-        self.is_running = False
         self.start()
 
     def run(self):
-        self.is_running = True
         print("ClientThread: Started receiving")
         socket_status = ClientThreadResponse.COUNTINUE_LISTENING
         current_file = ""
@@ -46,8 +44,4 @@ class ClientThread(Thread):
             print(socket_status)
             os.remove(current_file)
 
-        self.stop_connection()
         print("ClientThread: Done")
-
-    def stop_connection(self):
-        self.is_running = False
