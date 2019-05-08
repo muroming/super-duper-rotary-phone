@@ -2,21 +2,21 @@ import sqlite3 as sql
 
 from Client.Client import Client
 
-DATABASE_NAME = "SMARTHOUSE_DATABASE"
+DATABASE_NAME = "./Database/SMARTHOUSE_DATABASE"
 
 USER_ACTIONS_TABLE_NAME = "USER_ACTIONS"
 USERS_TABLE_NAME = "USERS"
 
 USER_ACTIONS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_login TEXT NOT NULL, user_action TEXT NOT NULL, timestamp DATETIME NOT NULL)" % USER_ACTIONS_TABLE_NAME
-USERS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_name TEXT NOT NULL, user_login TEXT NOT NULL, user_password TEXT NOT NULL)" % USERS_TABLE_NAME
+USERS_TABLE = "%s (user_name TEXT PRIMARY KEY NOT NULL, user_login TEXT NOT NULL, user_password TEXT NOT NULL)" % USERS_TABLE_NAME
 
 USER_ACTIONS_INSERT_NO_ID = "%s (user_login, user_action, timestamp)" % USER_ACTIONS_TABLE_NAME
-USERS_TABLE_INSERT_NO_ID = "%s (user_name, user_login, user_password)" % USERS_TABLE_NAME
+USERS_TABLE_INSERT = "%s (user_name, user_login, user_password)" % USERS_TABLE_NAME
 
 CHECK_TABLE_ACTION = "CREATE TABLE IF NOT EXISTS %s"
 
 INSERT_ACTION = "INSERT INTO %s VALUES(?, ?, ?)" % USER_ACTIONS_INSERT_NO_ID
-INSERT_USER = "INSERT INTO %s VALUES (?, ?, ?)" % USERS_TABLE_INSERT_NO_ID
+INSERT_USER = "INSERT INTO %s VALUES (?, ?, ?)" % USERS_TABLE_INSERT
 
 FIND_ACTIONS_BY_LOGIN = "SELECT * FROM %s WHERE user_login=?" % USER_ACTIONS_TABLE_NAME
 FIND_USER_BY_LOGIN = "SELECT * FROM %s WHERE user_login=?" % USERS_TABLE_NAME
@@ -51,8 +51,8 @@ def get_user_actions_by_login(client_login):
     if len(vals) == 0:
         return None
 
-    id, name, login, password = vals
-    return Client(id, name, login, password)
+    name, login, password = vals
+    return Client(name, login, password)
 
 
 def save_user(name, login, password):
@@ -66,16 +66,16 @@ def save_user(name, login, password):
     if len(vals) == 0:
         return None
 
-    id, name, login, password = vals
-    return Client(id, name, login, password)
+    name, login, password = vals
+    return Client(name, login, password)
 
 
 def get_user_by_login(user_login):
     con = get_connection()
     cursor = con.cursor()
     cursor.execute(FIND_USER_BY_LOGIN, user_login)
-    id, name, login, password = cursor.fetchone()
-    return Client(id, name, login, password)
+    name, login, password = cursor.fetchone()
+    return Client(name, login, password)
 
 
 def login_user(login, password):
@@ -87,8 +87,8 @@ def login_user(login, password):
     if vals == None:
         return None
 
-    id, name, login, password = vals
-    return Client(id, name, login, password)
+    name, login, password = vals
+    return Client(name, login, password)
 
 
 check_tables()

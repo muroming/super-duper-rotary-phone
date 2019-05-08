@@ -10,7 +10,6 @@ from NeuralNets.FaceRecognition import Recognition
 
 cache_folder = "cache"
 dataset_folder = "NeuralNets/FaceRecognition/encodings"
-trash_symbol = "^"
 
 
 class ClientThreadResponse(Enum):

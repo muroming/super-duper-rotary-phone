@@ -1,9 +1,17 @@
 import time
 from threading import Thread
 
+import Constants
+import ServerToRasp
 from Client import ClientSessions, ClientThreadCallbacks
 from Client.ClientThread import ClientThread
 from NeuralNets.FaceRecognition.Recognition import person_faces_amount
+
+
+def fetch_home_info(client_socket):
+    print("Fething home data from Raspberry")
+    data = ServerToRasp.fetch_home_info()
+    client_socket.send(data.encode())
 
 
 def add_photos(client_socket):
@@ -20,7 +28,8 @@ def login_user(client_socket):
     print(user_data)
     user_login, user_password = user_data.split(" ")
     user = ClientSessions.login_user(user_login, user_password)
-    client_socket.send(b"Successful" if user is not None else b"User not found")
+    client_socket.send(Constants.successful_response.encode()
+                       if user is not None else Constants.error_response.encode())
 
 
 def create_user(client_socket):
@@ -29,7 +38,8 @@ def create_user(client_socket):
     print(user_data)
     user_name, user_login, user_password = user_data.split(" ")
     user = ClientSessions.create_user(user_name, user_login, user_password)
-    client_socket.send(b"Successful" if user is not None else b"Something went wrong")
+    client_socket.send(Constants.successful_response.encode()
+                       if user is not None else Constants.error_response.encode())
 
 
 def logout_user(client_socket):
@@ -38,7 +48,8 @@ def logout_user(client_socket):
     print(user_data)
     user_login, user_password = user_data.split(" ")
     user = ClientSessions.logout_user(user_login, user_password)
-    client_socket.send(b"Successful" if user is not None else b"Something went wrong")
+    client_socket.send(Constants.successful_response.encode()
+                       if user is not None else Constants.error_response.encode())
 
 
 def validate_user(client_socket):
@@ -47,7 +58,7 @@ def validate_user(client_socket):
 
 
 def remove_string_fillers(string):
-    return str(string).replace(ClientThreadCallbacks.trash_symbol, "")
+    return str(string).replace(Constants.trash_symbol, "")
 
 
 # Actions
@@ -61,7 +72,9 @@ actions = {
     # AUTHORIZE
     "3": validate_user,
     # ADD_USER_PHOTOS
-    "4": add_photos
+    "4": add_photos,
+    # FETCH_HOME_INFO
+    "5", fetch_home_info
 }
 
 
