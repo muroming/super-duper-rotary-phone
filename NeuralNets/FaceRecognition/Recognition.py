@@ -4,27 +4,45 @@ import random
 import face_recognition
 import matplotlib.pyplot as plt
 import numpy as np
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.layers import BatchNormalization, Dense, Input
+from keras.models import Sequential
+from keras.models import load_model as lm
 
 import cv2
 
-encodings = []
-names = []
-person_faces_amount = 2
-percentage_to_auhtorize = 0.8
+model = None
+
+names = {}
+person_faces_amount = 300
+model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
+encodings_path = "./NeuralNets/FaceRecognition/encodings"
+encodings_name = "%s.npy"
+binarizer = LabelBinarizer()
 
 
-def extract_images_from_video(label, video_path, save_path):
-    cap = cv2.VideoCapture(video_path)
-    ind = 0
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+def load_model():
+    global model
+    print("Loading model")
+    model = lm(model_path)
+    print("Loaded")
 
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        plt.imsave(os.path.join(save_path, label + str(ind)), frame)
-        ind += 1
-        print('Saving %s' % (label + str(ind)))
+
+def create_fc_model(number_persons, compiled=True):
+    model = Sequential()
+    model.add(Dense(512, kernel_initializer='glorot_uniform',
+                    activation='relu', input_shape=(None, 128)))
+    model.add(BatchNormalization())
+    model.add(Dense(512, kernel_initializer='glorot_uniform', activation='relu'))
+    model.add(BatchNormalization())
+    model.add(Dense(number_persons, activation='sigmoid'))
+
+    model.summary()
+
+    if compiled:
+        model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
+
+    return model
 
 
 def extract_face_from_image(image, detection_type=0):
@@ -42,24 +60,44 @@ def extract_face_from_image(image, detection_type=0):
     return encoding
 
 
-def add_person(label, dataset_path, detection_type=0):
-    imgs = []
-    for path in os.listdir(dataset_path):
-        if label in path:
-            img = cv2.imread(os.path.join(dataset_path, path))
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            imgs.append(img)
+def save_person_encodings(encodings, name):
+    np.save(encodings, os.path.join(encodings_path, encodings_name % name))
 
-    encodings = []
-    for i, img in enumerate(imgs):
-        faces = face_recognition.face_locations(img, detection_type)
-        encoding = face_recognition.face_encodings(img, faces)
-        encodings.append(encoding)
-        print("Encodings for %s %i/%i" % (label, i + 1, len(imgs)))
 
-    encodings = np.array(encodings)
-    encodings = np.reshape(encodings, (encodings.shape[0], 128))
-    np.save('./encodings/%s.npy' % label, encodings)
+def load_names():
+    global names
+    names = [name[:-4] for names in os.listdir(encodings_path)]
+
+
+def person_id_to_bin(total, id):
+    res = "0" * total
+    res[id] = 1
+    return res
+
+
+def train_classifier():
+    print("Getting encodings")
+    X, y = [], []
+    persons = 0
+    for person in os.listdir(encodings_path):
+        name = person[:-4]
+        print("Encodings for %s" % name)
+        enc = np.load(os.path.join(encodings_path, person))
+        X = np.vstack((X, enc))
+        names[persons] = name
+        y.extend([persons for _ in range(enc.shape[0])])
+        persons += 1
+
+    y = list(map(person_id_to_bin, y))
+
+    print("Getting model")
+    model = create_fc_model(persons)
+    callbacks = [
+        ModelCheckpoint(filepath=model_path, save_best_only=True),
+        EarlyStopping(patience=3)
+    ]
+
+    model.fit(X, y, validation_split=.3, epochs=10, shuffle=True)
 
     print("Done")
 
@@ -76,46 +114,22 @@ def load_encodings(path):
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
-    if len(encodings) == 0:
-        raise RuntimeError("No encodings loaded")
+    if model is None:
+        raise RuntimeError("No model loaded")
 
     faces = face_recognition.face_locations(image, detection_type)
-    encoding = face_recognition.face_encodings(image, faces)
+    encoding = face_recognition.face_encodings(image, faces[0])
 
-    ns = {}
-    name = "unknown"
-    for enc in encoding:
-        matches = face_recognition.compare_faces(encodings, enc)
+    predict = model.predict(encoding)
 
-        if np.any(matches):
-            matchedIdxs = [i for (i, b) in enumerate(matches) if b]
-            counts = {}
-
-            for i in matchedIdxs:
-                name = names[i]
-                counts[name] = counts.get(name, 0) + 1
-
-            score = -1
-            if max(counts.values()) >= person_faces_amount * percentage_to_auhtorize:
-                name = max(counts, key=counts.get)
-                score = counts[name]
-
-        ns[name] = score
-
-    return max(ns, key=ns.get)
-
-    # return "Nikita" if bool(random.randint(0, 2)) else "unknown"
-
-    # for ((top, right, bottom, left), name) in zip(faces, ns):
-    #     cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
-    #     y = top - 15 if top - 15 > 15 else top + 15
-    #     cv2.putText(image, name, (left, y), cv2.FONT_HERSHEY_SIMPLEX,
-    #                 0.75, (0, 255, 0), 2)
-    #
-    # return image
+    return names[np.argmax(predict)]
 
 
-load_encodings('./NeuralNets/FaceRecognition/encodings')
+load_names()
+
+if os.path.exists(model_path):
+    load_model()
+
 # print("D")
 #
 # cap = cv2.VideoCapture(0)
