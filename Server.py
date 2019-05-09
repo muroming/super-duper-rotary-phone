@@ -15,9 +15,9 @@ QUSER_LOGIN = "user_login"
 QUSER_PASSWORD = "user_password"
 
 ip_address = ""
-serversocket_port = 8888
+serversocket_port = 8884
 rasp_ip = "192.168.43.26"
-rasp_port = 8887
+rasp_port = 8885
 
 serversocket = None
 

@@ -4,7 +4,8 @@ import uuid
 
 import cv2
 from Client.ClientThread import image_chunk_size
-from Client.ClientThreadCallbacks import trash_symbol
+from Constants import trash_symbol
+from Server import serversocket_port
 
 
 def login_user_test(s):
@@ -85,6 +86,7 @@ def fill_string(data, length):
 
 
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-s.connect(("127.0.0.1", 3456))
+s.connect(("127.0.0.1", serversocket_port))
 
-create_user_test(s)
+s.send(fill_string("5", 1024).encode())
+# s.send(fill_string("test", 1024).encode())

@@ -21,11 +21,12 @@ def fetch_avaliable_home_items(client_socket):
     login = client_socket.recv(1024).decode()
     login = remove_string_fillers(login)
     print("Fetching avaliable items for user", login)
-    items = json.dump(ClientSessions.fetch_user_items(login))
+    items = ClientSessions.fetch_user_items(login)
+    items = json.dumps(items, default=lambda x: x.__dict__)
     if Constants.is_debug:
         print(items)
 
-    client_socket.send(items)
+    client_socket.send(items.encode())
 
 
 def add_photos(client_socket):
