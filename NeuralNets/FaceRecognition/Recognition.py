@@ -1,5 +1,6 @@
 import os
 import random
+from threading import Thread
 
 import face_recognition
 import matplotlib.pyplot as plt
@@ -18,6 +19,16 @@ person_faces_amount = 300
 model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
 encodings_name = "%s.npy"
+
+
+class TrainingThread(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        print("Starting training thread")
+        self.run()
+
+    def run(self):
+        train_classifier()
 
 
 def load_model():
