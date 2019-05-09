@@ -28,8 +28,8 @@ def main():
     serversocket.bind((ip_address, serversocket_port))
     serversocket.listen(10)
 
-    print("Connecting to Raspberry")
-    ServerToRasp.connect_to_raspberry(rasp_ip, rasp_port)
+    # print("Connecting to Raspberry")
+    # ServerToRasp.connect_to_raspberry(rasp_ip, rasp_port)
 
     print("Server started")
 

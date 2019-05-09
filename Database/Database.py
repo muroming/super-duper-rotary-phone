@@ -2,8 +2,8 @@ import os
 import sqlite3 as sql
 import sys
 
-from Database.Client import Client
-from Database.HomeItem import HomeItem
+# from Database.Client import Client
+# from Database.HomeItem import HomeItem
 
 DATABASE_PATH = "/home/muroming/PythonProjects/SmartHouse/Database/SMARTHOUSE_DATABASE"
 
@@ -40,6 +40,8 @@ FIND_USER_ROLE_BY_LOGIN = "SELECT role FROM %s WHERE user_login=?" % USERS_TABLE
 FIND_ROLE_BY_NAME = "SELECT * FROM %s WHERE role_name=?" % ROLES_TABLE_NAME
 FIND_HOME_ITEM_BY_ID = "SELECT * FROM %s WHERE id=?" % HOME_ITEMS_TABLE_NAME
 FIND_ACTION_BY_ID = "SELECT * FROM %s WHERE id=?" % ACTIONS_TABLE_NAME
+
+DELETE_USER_BY_LOGIN = "DELETE FROM %s WHERE user_login=?" % USERS_TABLE_NAME
 
 GET_ALL_QUERY = "SELECT * FROM %s"
 
@@ -163,12 +165,24 @@ def get_all_items(name):
         print(item)
 
 
+def delete_user_by_login(user_login):
+    con = get_connection()
+    print("Deleting user", user_login)
+    cursor = con.cursor()
+    cursor.execute(DELETE_USER_BY_LOGIN, (user_login,))
+    con.commit()
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args[0].lower() == "drop":
         drop_database()
     elif args[0].lower() == "create":
         check_tables()
+
+    elif args[0].lower() == "delete":
+        if args[1].lower() == "userlogin":
+            delete_user_by_login(args[2])
 
     elif args[0].lower() == "get":
         if args[1].lower() == "items":
