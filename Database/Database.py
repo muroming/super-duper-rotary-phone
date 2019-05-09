@@ -89,9 +89,9 @@ def get_user_actions_by_login(client_login):
     return Client(name, login, password)
 
 
-def save_user(name, login, password):
+def save_user(name, login, password, role="user"):
     cursor = get_cursor()
-    insert(INSERT_USER, (name, login, password))
+    insert(INSERT_USER, (name, login, password, role))
     cursor.execute(FIND_USER_BY_LOGIN_PASSWORD, (login, password))
     vals = cursor.fetchone()
     print("Save_user:", vals)

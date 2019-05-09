@@ -18,7 +18,6 @@ person_faces_amount = 300
 model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
 encodings_name = "%s.npy"
-binarizer = LabelBinarizer()
 
 
 def load_model():
@@ -129,22 +128,3 @@ load_names()
 
 if os.path.exists(model_path):
     load_model()
-
-# print("D")
-#
-# cap = cv2.VideoCapture(0)
-# while True:
-#     # Capture frame-by-frame
-#     ret, frame = cap.read()
-#
-#     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-#     frame = validate_person(frame)
-#     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-#
-#     cv2.imshow('frame', frame)
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
-#
-# # When everything done, release the capture
-# cap.release()
-# cv2.destroyAllWindows()

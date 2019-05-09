@@ -23,6 +23,12 @@ def fetch_avaliable_home_items(client_socket):
     print("Fetching avaliable items for user", login)
     items = ClientSessions.fetch_user_items(login)
     items = json.dumps(items, default=lambda x: x.__dict__)
+
+    if len(items) != 0:
+        items = Constants.successful_response + items
+    else:
+        items = Constants.error_response
+
     if Constants.is_debug:
         print(items)
 
