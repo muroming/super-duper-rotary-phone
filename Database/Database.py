@@ -1,30 +1,53 @@
+import os
 import sqlite3 as sql
+import sys
 
-from Client.Client import Client
+from Database.Client import Client
+from Database.HomeItem import HomeItem
 
-DATABASE_NAME = "./Database/SMARTHOUSE_DATABASE"
+DATABASE_PATH = "/home/muroming/PythonProjects/SmartHouse/Database/SMARTHOUSE_DATABASE"
 
 USER_ACTIONS_TABLE_NAME = "USER_ACTIONS"
 USERS_TABLE_NAME = "USERS"
+HOME_ITEMS_TABLE_NAME = "HOME_ITEMS"
+ROLES_TABLE_NAME = "ROLES"
+ACTIONS_TABLE_NAME = "ACTIONS"
 
 USER_ACTIONS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_login TEXT NOT NULL, user_action TEXT NOT NULL, timestamp DATETIME NOT NULL)" % USER_ACTIONS_TABLE_NAME
-USERS_TABLE = "%s (user_name TEXT PRIMARY KEY NOT NULL, user_login TEXT NOT NULL, user_password TEXT NOT NULL)" % USERS_TABLE_NAME
+USERS_TABLE = "%s (user_name TEXT NOT NULL, user_login TEXT PRIMARY KEY NOT NULL, user_password TEXT NOT NULL, role TEXT NOT NULL)" % USERS_TABLE_NAME
+HOME_ITEMS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, item_name TEXT NOT NULL, item_description TEXT, item_photo TEXT)" % HOME_ITEMS_TABLE_NAME
+ROLES_TABLE = "%s (role_name TEXT PRIMARY KEY NOT NULL, interactable_items TEXT NOT NULL, actions TEXT)" % ROLES_TABLE_NAME
+ACTIONS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, action_name TEXT NOT NULL)" % ACTIONS_TABLE_NAME
 
 USER_ACTIONS_INSERT_NO_ID = "%s (user_login, user_action, timestamp)" % USER_ACTIONS_TABLE_NAME
-USERS_TABLE_INSERT = "%s (user_name, user_login, user_password)" % USERS_TABLE_NAME
+USERS_INSERT = "%s (user_name, user_login, user_password)" % USERS_TABLE_NAME
+HOME_ITEM_INSERT_NO_ID = "%s (item_name, item_description, item_photo)" % HOME_ITEMS_TABLE
+ROLES_INSERT = "%s (role_name, interactable_items, actions)" % ROLES_TABLE_NAME
+ACTIONS_INSERT_NO_ID = "%s (action_name)" % ACTIONS_TABLE_NAME
 
 CHECK_TABLE_ACTION = "CREATE TABLE IF NOT EXISTS %s"
 
-INSERT_ACTION = "INSERT INTO %s VALUES(?, ?, ?)" % USER_ACTIONS_INSERT_NO_ID
-INSERT_USER = "INSERT INTO %s VALUES (?, ?, ?)" % USERS_TABLE_INSERT
+INSERT_USER_ACTION = "INSERT INTO %s VALUES(?, ?, ?)" % USER_ACTIONS_INSERT_NO_ID
+INSERT_USER = "INSERT INTO %s VALUES (?, ?, ?)" % USERS_INSERT
+INSERT_HOME_ITEM = "INSERT INTO %s VALUES (?, ?, ?)" % HOME_ITEM_INSERT_NO_ID
+INSERT_ROLE = "INSERT INTO %s VALUES (?, ?, ?)" % ROLES_INSERT
+INSERT_ACTION = "INSERT INTO %s VALUES (?)" % ACTIONS_INSERT_NO_ID
 
 FIND_ACTIONS_BY_LOGIN = "SELECT * FROM %s WHERE user_login=?" % USER_ACTIONS_TABLE_NAME
 FIND_USER_BY_LOGIN = "SELECT * FROM %s WHERE user_login=?" % USERS_TABLE_NAME
 FIND_USER_BY_LOGIN_PASSWORD = "SELECT * FROM %s WHERE user_login=? AND user_password=?" % USERS_TABLE_NAME
+FIND_USER_ROLE_BY_LOGIN = "SELECT role FROM %s WHERE user_login=?" % USERS_TABLE_NAME
+FIND_ROLE_BY_NAME = "SELECT * FROM %s WHERE role_name=?" % ROLES_TABLE_NAME
+FIND_HOME_ITEM_BY_ID = "SELECT * FROM %s WHERE id=?" % HOME_ITEMS_TABLE_NAME
+FIND_ACTION_BY_ID = "SELECT * FROM %s WHERE id=?" % ACTIONS_TABLE_NAME
 
 
 def get_connection():
-    return sql.connect(DATABASE_NAME)
+    return sql.connect(DATABASE_PATH)
+
+
+def get_cursor():
+    return get_cursor.cursor()
 
 
 def check_tables():
@@ -33,62 +56,94 @@ def check_tables():
     cursor.execute(CHECK_TABLE_ACTION % USER_ACTIONS_TABLE)
     cursor.execute(CHECK_TABLE_ACTION % USERS_TABLE)
     con.commit()
+    print("All tables now exist")
 
 
-def insert_user_action(client_login, client_action, timestamp):
+def insert(action, values):
+    if type(values) != tuple:
+        raise ValueError(tuple)
+
     con = get_connection()
     cursor = con.cursor()
-    cursor.execute(INSERT_ACTION, (client_login, client_action, timestamp))
+    cursor.execute(action, values)
     con.commit()
+    print("Inserted into", action.split(" ")[2], "values", values)
 
 
 def get_user_actions_by_login(client_login):
-    con = get_connection()
-    cursor = con.cursor()
+    cursor = get_cursor()
     cursor.execute(FIND_ACTIONS_BY_LOGIN, client_login)
     vals = cursor.fetchone()
     print("Save_user:", vals)
     if len(vals) == 0:
         return None
 
-    name, login, password = vals
+    name, login, password, role = vals
     return Client(name, login, password)
 
 
 def save_user(name, login, password):
-    con = get_connection()
-    cursor = con.cursor()
-    cursor.execute(INSERT_USER, (name, login, password))
-    con.commit()
+    cursor = get_cursor()
+    insert(INSERT_USER, (name, login, password))
     cursor.execute(FIND_USER_BY_LOGIN_PASSWORD, (login, password))
     vals = cursor.fetchone()
     print("Save_user:", vals)
     if len(vals) == 0:
         return None
 
-    name, login, password = vals
+    name, login, password, role = vals
     return Client(name, login, password)
 
 
 def get_user_by_login(user_login):
-    con = get_connection()
-    cursor = con.cursor()
+    cursor = get_cursor()
     cursor.execute(FIND_USER_BY_LOGIN, user_login)
-    name, login, password = cursor.fetchone()
+    name, login, password, role = cursor.fetchone()
     return Client(name, login, password)
 
 
 def login_user(login, password):
-    con = get_connection()
-    cursor = con.cursor()
+    cursor = get_cursor()
     cursor.execute(FIND_USER_BY_LOGIN_PASSWORD, (login, password))
     vals = cursor.fetchone()
     print("Login_user", vals)
     if vals == None:
         return None
 
-    name, login, password = vals
+    name, login, password, role = vals
     return Client(name, login, password)
 
 
-check_tables()
+def get_user_home_items(login):
+    cursor = get_cursor()
+    cursor.execute(FIND_USER_BY_LOGIN, login)
+    role = cursor.fetchone()
+    cursor.execute(FIND_ROLE_BY_NAME, role)
+    role_name, interaction_items, actions = cursor.fetchone()
+    items = []
+    for id in interaction_items.split(' '):
+        cursor.execute(FIND_HOME_ITEM_BY_ID, id)
+        id, item_name, item_description = cursor.execute()
+
+        items.append(HomeItem(id, item_name, item_description))
+
+    return items
+
+
+def drop_database():
+    if os.path.exists(DATABASE_PATH):
+        os.remove(DATABASE_PATH)
+    print("Database dropped")
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if args[0].lower() == "drop":
+        drop_database()
+    elif args[0].lower() == "create":
+        check_tables()
+    elif args[0].lower() == "insert":
+        if args[1].lower() == "role":
+            insert(INSERT_ROLE, tuple(args[2:]))
+        elif args[1].lower() == "action":
+            insert(INSERT_ACTION, tuple(args[2:]))

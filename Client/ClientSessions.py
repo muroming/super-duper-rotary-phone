@@ -27,6 +27,8 @@ def logout_user(login, password):
 
 
 def create_user(name, login, password):
-    user = Database.save_user(name, login, password)
+    return Database.save_user(name, login, password)
 
-    return user
+
+def fetch_user_items(login):
+    return Database.get_user_home_items(login)

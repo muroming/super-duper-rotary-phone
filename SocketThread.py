@@ -1,3 +1,4 @@
+import json
 import time
 from threading import Thread
 
@@ -11,7 +12,20 @@ from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 def fetch_home_info(client_socket):
     print("Fething home data from Raspberry")
     data = ServerToRasp.fetch_home_info()
+    if len(data) == 0:
+        data = Constants.error_response
     client_socket.send(data.encode())
+
+
+def fetch_avaliable_home_items(client_socket):
+    login = client_socket.recv(1024).decode()
+    login = remove_string_fillers(login)
+    print("Fetching avaliable items for user", login)
+    items = json.dump(ClientSessions.fetch_user_items(login))
+    if Constants.is_debug:
+        print(items)
+
+    client_socket.send(items)
 
 
 def add_photos(client_socket):
@@ -22,22 +36,22 @@ def add_photos(client_socket):
     return ClientThread(client_socket, ClientThreadCallbacks.add_user_photo_callback, username=username)
 
 
-def login_user(client_socket):
-    print("Logining user")
-    user_data = remove_string_fillers(client_socket.recv(1024).decode())
-    print(user_data)
-    user_login, user_password = user_data.split(" ")
-    user = ClientSessions.login_user(user_login, user_password)
-    client_socket.send(Constants.successful_response.encode()
-                       if user is not None else Constants.error_response.encode())
-
-
 def create_user(client_socket):
     print("Creating user")
     user_data = remove_string_fillers(client_socket.recv(1024).decode())
     print(user_data)
     user_name, user_login, user_password = user_data.split(" ")
     user = ClientSessions.create_user(user_name, user_login, user_password)
+    client_socket.send(Constants.successful_response.encode()
+                       if user is not None else Constants.error_response.encode())
+
+
+def login_user(client_socket):
+    print("Logining user")
+    user_data = remove_string_fillers(client_socket.recv(1024).decode())
+    print(user_data)
+    user_login, user_password = user_data.split(" ")
+    user = ClientSessions.login_user(user_login, user_password)
     client_socket.send(Constants.successful_response.encode()
                        if user is not None else Constants.error_response.encode())
 
@@ -74,7 +88,9 @@ actions = {
     # ADD_USER_PHOTOS
     "4": add_photos,
     # FETCH_HOME_INFO
-    "5", fetch_home_info
+    "5": fetch_home_info,
+    # FETCH_AVALIABLE_HOME_ITEMS
+    "6": fetch_avaliable_home_items
 }
 
 

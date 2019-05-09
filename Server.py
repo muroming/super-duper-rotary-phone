@@ -2,6 +2,7 @@ import json
 import socket as sk
 import sys
 
+import ServerToRasp
 from Client import ClientSessions, ClientThreadCallbacks
 from Client.ClientThread import ClientThread
 from NeuralNets.FaceRecognition.Recognition import person_faces_amount
@@ -15,6 +16,8 @@ QUSER_PASSWORD = "user_password"
 
 ip_address = ""
 serversocket_port = 8888
+rasp_ip = "192.168.43.26"
+rasp_port = 8887
 
 serversocket = None
 
@@ -24,6 +27,9 @@ def main():
     serversocket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
     serversocket.bind((ip_address, serversocket_port))
     serversocket.listen(10)
+
+    print("Connecting to Raspberry")
+    ServerToRasp.connect_to_raspberry(rasp_ip, rasp_port)
 
     print("Server started")
 
