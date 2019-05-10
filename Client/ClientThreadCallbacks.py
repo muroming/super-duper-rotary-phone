@@ -5,6 +5,7 @@ from enum import Enum
 
 import numpy as np
 
+import Constants
 from Database import Database
 from NeuralNets.FaceRecognition import Recognition
 
@@ -41,11 +42,11 @@ def add_user_photo_callback(image, socket, username):
     encoding = Recognition.extract_face_from_image(image)
     if len(encoding) == 0:
         print("Face not found!")
-        socker.send(b"NO")  # Face Not Found
+        socket.send(Constants.error_response.encode())  # Face Not Found
         return ClientThreadResponse.COUNTINUE_LISTENING
 
     print("Face found!")
-    socket.send(b"OK")  # Face found
+    socket.send(Constants.successful_response.encode())  # Face found
 
     faces_path = os.path.join(cache_folder, "%s_faces.npy" % username)
     if os.path.exists(faces_path):

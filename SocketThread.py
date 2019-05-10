@@ -8,6 +8,7 @@ import ServerToRasp
 from Client import ClientSessions, ClientThreadCallbacks
 from Client.ClientThread import ClientThread
 from NeuralNets.FaceRecognition.Recognition import person_faces_amount
+from StringUtils import remove_string_fillers
 
 
 def fetch_home_info(client_socket):
@@ -82,10 +83,6 @@ def validate_user(client_socket):
     return ClientThread(client_socket, ClientThreadCallbacks.authorize_user)
 
 
-def remove_string_fillers(string):
-    return str(string).replace(Constants.trash_symbol, "")
-
-
 # Actions
 actions = {
     # LOGIN_USER
@@ -117,4 +114,6 @@ class SocketThread(Thread):
         action = remove_string_fillers(self.client_socket.recv(1024).decode())
         print(action, actions[action])
         self.thread = actions[action](self.client_socket)
+        if self.thread is not None:
+            self.thread.join
         print("Socket thread done")

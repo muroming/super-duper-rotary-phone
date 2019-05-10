@@ -3,7 +3,6 @@ import socket as sk
 import uuid
 
 import cv2
-from Client.ClientThread import image_chunk_size
 from Constants import trash_symbol
 from Server import serversocket_port
 
@@ -23,27 +22,18 @@ def create_user_test(s):
 
 
 def send_pic_test(s):
-    s.send(b"4")
+    s.send(fill_string("4", 1024).encode())
     s.send(fill_string("testuser", 1024).encode())
     faces = int(s.recv(3).decode())
     print("Faces requiered:", faces)
     for _ in range(2):
         with open('me.jpg', 'rb') as f:
             bytes = f.read()
-            current_chunk = 0
-            while current_chunk < len(bytes) // image_chunk_size:
-                data = bytes[current_chunk
-                             * image_chunk_size:(current_chunk + 1) * image_chunk_size]
-                print("Bytes sent:", len(bytes))
-                s.send(data)
-                current_chunk += 1
-
-            print("Last chunk")
-            data = bytes[current_chunk * image_chunk_size:]
-            print("Bytes sent:", len(bytes))
-            s.send(data)
-        response = s.recv(2).decode()
-        if response == "OK":
+            print(len(bytes))
+            s.send(fill_string(str(len(bytes)), 1024).encode())
+            s.send(bytes)
+        response = s.recv(3).decode()
+        if response == "200":
             faces -= 1
         print("Faces left:", faces)
 
@@ -88,5 +78,5 @@ def fill_string(data, length):
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 s.connect(("127.0.0.1", serversocket_port))
 
-s.send(fill_string("5", 1024).encode())
+send_pic_test(s)
 # s.send(fill_string("test", 1024).encode())

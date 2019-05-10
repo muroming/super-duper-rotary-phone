@@ -1,12 +1,12 @@
+import base64
 import os
 import uuid
 from threading import Thread
 
 import cv2
 from Client.ClientThreadCallbacks import ClientThreadResponse
+from StringUtils import remove_string_fillers
 
-token_connections = 3  # How many tries to connect to socket via token
-image_chunk_size = 1024
 cache_folder = "cache"
 
 
@@ -23,19 +23,24 @@ class ClientThread(Thread):
         socket_status = ClientThreadResponse.COUNTINUE_LISTENING
         current_file = ""
         while socket_status == ClientThreadResponse.COUNTINUE_LISTENING:
-            print("ClientThread: ClNew file")
-            current_file = os.path.join(".",
-                                        cache_folder, "%s.jpg" % str(uuid.uuid4()))
+            print("ClientThread: New file")
+
+            img_size = self.client_socket.recv(1024).decode()
+            img_size = remove_string_fillers(img_size)
+            img_size = int(img_size)
+
+            print("Expected img_size:", img_size)
+
+            current_file = os.path.join(".", cache_folder, "%s.jpg" % str(uuid.uuid4()))
             image = open(current_file, 'wb')
-            while True:
-                data = self.client_socket.recv(image_chunk_size)
-                print("Data length:", len(data))
-                if len(data) > 0:
-                    image.write(data)
+            data = ""
+            while len(data) != img_size:
+                print("Recieving more")
+                data += self.client_socket.recv(img_size).decode()
 
-                if len(data) < image_chunk_size:
-                    break
-
+            print(data, len(data))
+            data = base64.b64decode(data)
+            image.write(data)
             image.close()
             img = cv2.imread(current_file)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

@@ -2,6 +2,7 @@ import socket as sk
 
 import Constants
 from Client import ClientThreadCallbacks
+from StringUtils import *
 
 raps_socket = None
 
@@ -13,10 +14,6 @@ def fetch_home_info():
     print("Home info:", data)
 
     return data
-
-
-def remove_string_fillers(string):
-    return str(string).replace(Constants.trash_symbol, "")
 
 
 def connect_to_raspberry(ip, port):
