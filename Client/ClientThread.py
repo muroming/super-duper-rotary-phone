@@ -3,8 +3,11 @@ import os
 import uuid
 from threading import Thread
 
+import Constants
 import cv2
-from Client.ClientThreadCallbacks import ClientThreadResponse
+from Client.ClientThreadCallbacks import (ClientThreadResponse,
+                                          add_user_photo_callback)
+from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 from StringUtils import remove_string_fillers
 
 cache_folder = "cache"
@@ -22,6 +25,7 @@ class ClientThread(Thread):
         print("ClientThread: Started receiving")
         socket_status = ClientThreadResponse.COUNTINUE_LISTENING
         current_file = ""
+        photos_to_recieve = person_faces_amount
         while socket_status == ClientThreadResponse.COUNTINUE_LISTENING:
             print("ClientThread: New file")
 
@@ -35,18 +39,23 @@ class ClientThread(Thread):
             image = open(current_file, 'wb')
             data = ""
             while len(data) != img_size:
-                print("Recieving more")
                 data += self.client_socket.recv(img_size).decode()
 
-            print(data, len(data))
+            print("Quaq", len(data))
             data = base64.b64decode(data)
             image.write(data)
             image.close()
+            photos_to_recieve -= 1
+
             img = cv2.imread(current_file)
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            socket_status = self.image_callback(
-                img, self.client_socket, **self.callback_args)
-            print(socket_status)
+            # TODO: pass save parameter
+            if self.image_callback.__name__ == add_user_photo_callback.__name__:
+                self.callback_args["photos"] = photos_to_recieve
+            socket_status = self.image_callback(img, self.client_socket, **self.callback_args)
             os.remove(current_file)
+            print(photos_to_recieve)
 
+        os.remove(current_file)
+        self.client_socket.send(Constants.successful_response.encode())
         print("ClientThread: Done")

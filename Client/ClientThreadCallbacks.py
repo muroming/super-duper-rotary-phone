@@ -32,7 +32,7 @@ def authorize_user(image, socket):
     return result
 
 
-def add_user_photo_callback(image, socket, username):
+def add_user_photo_callback(image, socket, username, photos):
     """
     Params:
         image - RGB 3 dim array
@@ -42,11 +42,9 @@ def add_user_photo_callback(image, socket, username):
     encoding = Recognition.extract_face_from_image(image)
     if len(encoding) == 0:
         print("Face not found!")
-        socket.send(Constants.error_response.encode())  # Face Not Found
         return ClientThreadResponse.COUNTINUE_LISTENING
 
     print("Face found!")
-    socket.send(Constants.successful_response.encode())  # Face found
 
     faces_path = os.path.join(cache_folder, "%s_faces.npy" % username)
     if os.path.exists(faces_path):
@@ -54,14 +52,15 @@ def add_user_photo_callback(image, socket, username):
         user_faces = np.vstack((user_faces, encoding))
         print("Currect amount of faces for user", username, "%d/%d" %
               (user_faces.shape[0], Recognition.person_faces_amount))
-        np.save(faces_path, user_faces)
 
-        if len(user_faces) == Recognition.person_faces_amount:
+        if photos == 0:
             os.remove(faces_path)
             np.save(os.path.join(dataset_folder, "%s.npy" % username), user_faces)
             print("Person saved!")
             Recognition.TrainingThread()
             return ClientThreadResponse.CLOSE_SOCKET
+        else:
+            np.save(faces_path, user_faces)
     else:
         np.save(faces_path, encoding)
 

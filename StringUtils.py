@@ -6,5 +6,4 @@ def remove_string_fillers(string):
 
 
 def fill_string(data, length):
-    print(data, len(data))
     return data + Constants.trash_symbol * (length - len(data))

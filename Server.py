@@ -1,11 +1,7 @@
-import json
 import socket as sk
 import sys
 
 import ServerToRasp
-from Client import ClientSessions, ClientThreadCallbacks
-from Client.ClientThread import ClientThread
-from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 from SocketThread import SocketThread
 
 QTOKEN = "token"
@@ -15,7 +11,7 @@ QUSER_LOGIN = "user_login"
 QUSER_PASSWORD = "user_password"
 
 ip_address = ""
-serversocket_port = 8882
+serversocket_port = 8887
 rasp_ip = "192.168.43.26"
 rasp_port = 8885
 

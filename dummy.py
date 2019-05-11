@@ -1,9 +1,9 @@
+import base64
 import os
 import socket as sk
 import uuid
 
 import cv2
-from Constants import trash_symbol
 from Server import serversocket_port
 
 
@@ -21,21 +21,18 @@ def create_user_test(s):
     print(s.recv(1024).decode())
 
 
-def send_pic_test(s):
+def send_pic_test(s, username):
     s.send(fill_string("4", 1024).encode())
-    s.send(fill_string("testuser", 1024).encode())
-    faces = int(s.recv(3).decode())
+    s.send(fill_string(username, 1024).encode())
+    faces = int(s.recv(2).decode())
     print("Faces requiered:", faces)
-    for _ in range(2):
-        with open('me.jpg', 'rb') as f:
-            bytes = f.read()
-            print(len(bytes))
-            s.send(fill_string(str(len(bytes)), 1024).encode())
-            s.send(bytes)
-        response = s.recv(3).decode()
-        if response == "200":
-            faces -= 1
-        print("Faces left:", faces)
+    for _ in range(10):
+        name = "no" + username + ".jpg" if _ % 2 == 0 else username + ".jpg"
+        print(name)
+        with open(name, 'rb') as f:
+            b64 = base64.b64encode(f.read())
+            s.send(fill_string(str(len(b64)), 1024).encode())
+            s.send(b64)
 
 
 def authorize_user_test(s):
@@ -78,5 +75,5 @@ def fill_string(data, length):
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 s.connect(("127.0.0.1", serversocket_port))
 
-send_pic_test(s)
-# s.send(fill_string("test", 1024).encode())
+# send_pic_test(s, "me")
+send_pic_test(s, "ka")

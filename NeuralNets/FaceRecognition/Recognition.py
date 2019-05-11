@@ -1,23 +1,24 @@
 import os
-import random
 from threading import Thread
 
 import face_recognition
-import matplotlib.pyplot as plt
 import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import BatchNormalization, Dense, Input
+from keras.layers import BatchNormalization, Dense
 from keras.models import Sequential
 from keras.models import load_model as lm
+from keras.utils import to_categorical
 
 import cv2
 
 model = None
+face_detector = None
 
 names = {}
-person_faces_amount = 300
+person_faces_amount = 10
 model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
+face_cv_path = "./NeuralNets/FaceRecognition/%s"
 encodings_name = "%s.npy"
 
 
@@ -41,7 +42,7 @@ def load_model():
 def create_fc_model(number_persons, compiled=True):
     model = Sequential()
     model.add(Dense(512, kernel_initializer='glorot_uniform',
-                    activation='relu', input_shape=(None, 128)))
+                    activation='relu', input_shape=(128,)))
     model.add(BatchNormalization())
     model.add(Dense(512, kernel_initializer='glorot_uniform', activation='relu'))
     model.add(BatchNormalization())
@@ -55,7 +56,40 @@ def create_fc_model(number_persons, compiled=True):
     return model
 
 
-def extract_face_from_image(image, detection_type=0):
+def extract_face_from_image(image):
+    cv_enc = _extract_face_from_image_cv(image)
+    if len(cv_enc) != 0:
+        cv_enc = cv_enc[0]
+    else:
+        cv_enc = np.zeros((128,))
+    stock_enc = _extract_face_from_image_stock(image)
+    if len(stock_enc) != 0:
+        stock_enc = stock_enc[0]
+    else:
+        stock_enc = np.zeros((128, ))
+
+    result_enc = np.add(cv_enc, stock_enc) / (len(cv_enc) + len(stock_enc))
+
+    return result_enc if np.any(result_enc != 0.0) else []
+
+
+def _extract_face_from_image_cv(image):
+    global face_detector
+    gray_img = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    if face_detector is None:
+        face_detector = cv2.CascadeClassifier(face_cv_path % '/haarcascade_frontalface_alt.xml')
+
+    faces = face_detector.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5)
+    encoding = []
+
+    if len(faces) != 0:
+        faces = list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[1]), faces))
+        encoding = face_recognition.face_encodings(image, faces)
+
+    return encoding
+
+
+def _extract_face_from_image_stock(image, detection_type=0):
     """
     Params:
         image - RGB 3 dim array
@@ -64,7 +98,7 @@ def extract_face_from_image(image, detection_type=0):
     """
     encoding = []
     face = face_recognition.face_locations(image, detection_type)
-    if (len(face) != 0):
+    if len(face) != 0:  # top, right, bottom, left
         encoding = face_recognition.face_encodings(image, face)
 
     return encoding
@@ -76,16 +110,20 @@ def save_person_encodings(encodings, name):
 
 def load_names():
     global names
-    names = [name[:-4] for names in os.listdir(encodings_path)]
+    names = [name[:-4] for name in os.listdir(encodings_path)]
+    print(names)
 
 
 def person_id_to_bin(total, id):
-    res = "0" * total
+    res = np.zeros(total)
     res[id] = 1
-    return res
+    return res[0]
 
 
 def train_classifier():
+    print("Loading names")
+    load_names()
+
     print("Getting encodings")
     X, y = [], []
     persons = 0
@@ -93,12 +131,17 @@ def train_classifier():
         name = person[:-4]
         print("Encodings for %s" % name)
         enc = np.load(os.path.join(encodings_path, person))
-        X = np.vstack((X, enc))
+        if len(X) != 0:
+            X = np.vstack((X, enc))
+        else:
+            X = enc
         names[persons] = name
         y.extend([persons for _ in range(enc.shape[0])])
         persons += 1
 
-    y = list(map(person_id_to_bin, y))
+    print("Preparing targets")
+    y_bin = to_categorical(y)
+    print(y_bin)
 
     print("Getting model")
     model = create_fc_model(persons)
@@ -107,7 +150,7 @@ def train_classifier():
         EarlyStopping(patience=3)
     ]
 
-    model.fit(X, y, validation_split=.3, epochs=10, shuffle=True)
+    model.fit(X, y_bin, validation_split=.3, epochs=10, shuffle=True, callbacks=callbacks)
 
     print("Done")
 

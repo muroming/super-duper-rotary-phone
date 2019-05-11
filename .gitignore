@@ -7,5 +7,5 @@
 *.webm
 
 *.pyc
-
+*.h5
 SMARTHOUSE_DATABASE
