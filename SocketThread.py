@@ -20,8 +20,7 @@ def fetch_home_info(client_socket):
 
 
 def fetch_avaliable_home_items(client_socket):
-    login = client_socket.recv(1024).decode()
-    login = remove_string_fillers(login)
+    login = remove_string_fillers(client_socket.recv(1024).decode())
     print("Fetching avaliable items for user", login)
     items = ClientSessions.fetch_user_items(login)
     items = json.dumps(items, default=lambda x: x.__dict__)
@@ -83,6 +82,15 @@ def validate_user(client_socket):
     return ClientThread(client_socket, ClientThreadCallbacks.authorize_user)
 
 
+def toggle_item_power(client_socket):
+    print("Toggling")
+    id = remove_string_fillers(client_socket.recv(1024).decode())
+    if (ClientSessions.toggle_item_power(id)):
+        client_socket.send(Constants.successful_response.encode())
+    else:
+        client_socket.send(Constants.error_response.encode())
+
+
 # Actions
 actions = {
     # LOGIN_USER
@@ -98,7 +106,9 @@ actions = {
     # FETCH_HOME_INFO
     "5": fetch_home_info,
     # FETCH_AVALIABLE_HOME_ITEMS
-    "6": fetch_avaliable_home_items
+    "6": fetch_avaliable_home_items,
+    # TOGGLE ITEM POWER
+    "7": toggle_item_power
 }
 
 

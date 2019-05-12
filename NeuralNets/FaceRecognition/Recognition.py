@@ -16,7 +16,7 @@ face_detector = None
 
 names = {}
 person_faces_amount = 300
-predict_threshold = 0.7  # [0; 1] propabilty requiered to validate person
+predict_threshold = 0.9  # [0; 1] propabilty requiered to validate person
 model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
 face_cv_path = "./NeuralNets/FaceRecognition/%s"
@@ -30,7 +30,11 @@ class TrainingThread(Thread):
         self.run()
 
     def run(self):
-        train_classifier()
+        try:
+            train_classifier()
+        except Exception as e:
+            print("Training failed with exception")
+            print(e)
 
 
 def load_model():
@@ -44,7 +48,7 @@ def load_model():
 
 def create_fc_model(number_persons, compiled=True):
     model = Sequential()
-    model.add(Dense(32, kernel_initializer='glorot_uniform',
+    model.add(Dense(128, kernel_initializer='glorot_uniform',
                     activation='relu', input_shape=(128,)))
     model.add(BatchNormalization())
     model.add(Dense(number_persons, activation='sigmoid'))
@@ -103,7 +107,11 @@ def _extract_face_from_image_cv(image):
     if len(faces) > 1:
         faces = faces[0]
 
-    return list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[1]), faces)) if len(faces) != 0 else np.zeros((4,))
+    try:
+        return list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[1]), faces)) if len(faces) != 0 else np.zeros((4,))
+    except IndexError:
+        print("Index error faces CV", faces, type(faces))
+        return np.zeros((4,))
 
 
 def save_person_encodings(encodings, name):
@@ -172,6 +180,7 @@ def validate_person(image, detection_type=0):  # Assuming image is RGB
     encoding = extract_face_from_image(image)
 
     if len(encoding) == 0:
+        print("Face not found")
         return ""
     encoding = np.array(encoding[0]).reshape((1, 128))
 

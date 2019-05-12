@@ -1,10 +1,4 @@
-import os
-import pickle
-
 from Database import Database
-
-USER_DATA_DIR = os.path.join("Client", "UserData", "Authentication")
-USERS = "users.pickle"
 
 authenticated_users = []
 
@@ -24,6 +18,14 @@ def logout_user(login, password):
             return user
 
     return None
+
+
+def toggle_item_power(id):
+    try:
+        Database.toggle_item_power(id)
+        return True
+    except Exception:
+        return False
 
 
 def create_user(name, login, password):
