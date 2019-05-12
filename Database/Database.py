@@ -16,7 +16,7 @@ AUTHENTICATED_USERS_TABLE_NAME = "AUTHENTICATED_USERS"
 
 USER_ACTIONS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, user_login TEXT NOT NULL, user_action TEXT NOT NULL, timestamp DATETIME NOT NULL)" % USER_ACTIONS_TABLE_NAME
 USERS_TABLE = "%s (user_name TEXT NOT NULL, user_login TEXT PRIMARY KEY NOT NULL, user_password TEXT NOT NULL, role TEXT NOT NULL)" % USERS_TABLE_NAME
-HOME_ITEMS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, item_on INTEGER NOT NULL CHECK (item_on in (0, 1)), item_name TEXT NOT NULL, item_description TEXT, item_photo TEXT)" % HOME_ITEMS_TABLE_NAME
+HOME_ITEMS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, item_name TEXT NOT NULL, item_on INTEGER NOT NULL CHECK (item_on in (0, 1)), item_description TEXT, item_photo TEXT)" % HOME_ITEMS_TABLE_NAME
 ROLES_TABLE = "%s (role_name TEXT PRIMARY KEY NOT NULL, interactable_items TEXT NOT NULL, actions TEXT)" % ROLES_TABLE_NAME
 ACTIONS_TABLE = "%s (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, action_name TEXT NOT NULL)" % ACTIONS_TABLE_NAME
 AUTHENTICATED_USERS_TABLE = "%s (user_login TEXT PRIMARY KEY NOT NULL)" % AUTHENTICATED_USERS_TABLE_NAME
@@ -155,7 +155,7 @@ def toggle_item_power(id):
     else:
         print("Turning", name, "off")
         cursor.execute(UPDATE_ITEM_POWER_BY_ID, (0, id))
-    con.execute()
+    con.commit()
 
 
 def get_user_home_items(user_login):
@@ -218,6 +218,14 @@ def delete_item_by_id(id):
     con.commit()
 
 
+def delete_user_from_auth(login):
+    con = get_connection()
+    print("Deuath", login)
+    cursor = con.cursor()
+    cursor.execute(DELETE_USER_FROM_AUTHENTECATED, (login, ))
+    con.commit()
+
+
 def drop_table(name):
     con = get_connection()
     print("Dropping", name)
@@ -243,6 +251,8 @@ if __name__ == "__main__":
             delete_role_by_name(args[2])
         if args[1].lower() == "itemid":
             delete_item_by_id(args[2])
+        if args[1].lower() == "authlogin":
+            delete_user_from_auth(args[2])
 
     elif args[0].lower() == "get":
         if args[1].lower() == "items":
@@ -253,6 +263,8 @@ if __name__ == "__main__":
             get_all_items(ACTIONS_TABLE_NAME)
         elif args[1].lower() == "users":
             get_all_items(USERS_TABLE_NAME)
+        elif args[1].lower() == "auth":
+            get_all_items(AUTHENTICATED_USERS_TABLE_NAME)
 
     elif args[0].lower() == "update":
         if args[1].lower() == "userrole":

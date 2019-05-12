@@ -24,7 +24,8 @@ def toggle_item_power(id):
     try:
         Database.toggle_item_power(id)
         return True
-    except Exception:
+    except Exception as e:
+        print("Error while toggling", e)
         return False
 
 

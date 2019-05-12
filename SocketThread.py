@@ -85,7 +85,9 @@ def validate_user(client_socket):
 def toggle_item_power(client_socket):
     print("Toggling")
     id = remove_string_fillers(client_socket.recv(1024).decode())
-    if (ClientSessions.toggle_item_power(id)):
+    is_succ = ClientSessions.toggle_item_power(id)
+    print("Toggling", is_succ)
+    if (is_succ):
         client_socket.send(Constants.successful_response.encode())
     else:
         client_socket.send(Constants.error_response.encode())
