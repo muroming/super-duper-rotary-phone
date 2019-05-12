@@ -1,6 +1,3 @@
-import socket as sk
-
-import Constants
 from Client import ClientThreadCallbacks
 from StringUtils import *
 
@@ -16,9 +13,6 @@ def fetch_home_info():
     return data
 
 
-def connect_to_raspberry(ip, port):
+def set_rasp_socket(socket):
     global raps_socket
-    raps_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-    raps_socket.connect((ip, port))
-
-    print("Connected to Raspberry")
+    raps_socket = socket

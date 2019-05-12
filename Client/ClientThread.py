@@ -54,8 +54,9 @@ class ClientThread(Thread):
                 self.callback_args["photos"] = photos_to_recieve
             socket_status = self.image_callback(img, self.client_socket, **self.callback_args)
             os.remove(current_file)
-            print(photos_to_recieve)
 
-        os.remove(current_file)
+        if os.path.exists(current_file):
+            os.remove(current_file)
+
         self.client_socket.send(Constants.successful_response.encode())
         print("ClientThread: Done")

@@ -114,7 +114,7 @@ def save_person_encodings(encodings, name):
 def load_names():
     global names
     names = [name[:-4] for name in os.listdir(encodings_path)]
-    print(names)
+    print("Names loaded", names)
 
 
 def person_id_to_bin(total, id):
@@ -174,18 +174,17 @@ def load_encodings(path):
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
-    if model is None:
-        raise RuntimeError("No model loaded")
+    # if model is None:
+    #     raise RuntimeError("No model loaded")
+    #
+    # faces = face_recognition.face_locations(image, detection_type)
+    # encoding = face_recognition.face_encodings(image, faces[0])
+    #
+    # predict = model.predict(encoding)
+    #
+    # return names[np.argmax(predict)]
+    return "Nikita"
 
-    faces = face_recognition.face_locations(image, detection_type)
-    encoding = face_recognition.face_encodings(image, faces[0])
-
-    predict = model.predict(encoding)
-
-    return names[np.argmax(predict)]
-
-
-load_names()
 
 if os.path.exists(model_path):
     load_model()

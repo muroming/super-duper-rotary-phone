@@ -1,6 +1,5 @@
 import datetime
 import os
-import uuid
 from enum import Enum
 
 import numpy as np
@@ -8,6 +7,7 @@ import numpy as np
 import Constants
 from Database import Database
 from NeuralNets.FaceRecognition import Recognition
+from StringUtils import fill_string
 
 cache_folder = "cache"
 dataset_folder = "NeuralNets/FaceRecognition/encodings"
@@ -21,14 +21,14 @@ class ClientThreadResponse(Enum):
 def authorize_user(image, socket):
     name = Recognition.validate_person(image)
     if name == "unknown" or len(name) == 0:
-        name = "UNF"  # User Not Found
+        print("User not found")
+        socket.send(fill_string(Constants.error_response, 1024).encode())
         result = ClientThreadResponse.COUNTINUE_LISTENING
     else:
-        Database.insert_user_action(name, "AUTHORIZED WITH FACE",
-                                    datetime.datetime.now())
+        print("Authorized user:", name)
+        # Database.insert_user_action(name, "AUTHORIZED WITH FACE",datetime.datetime.now())
         result = ClientThreadResponse.CLOSE_SOCKET
-    print("Authorized user:", name)
-    socket.send(name.encode())
+        socket.send(fill_string(Constants.successful_response, 1024).encode())
     return result
 
 

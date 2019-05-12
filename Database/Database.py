@@ -2,8 +2,8 @@ import os
 import sqlite3 as sql
 import sys
 
-# from Database.Client import Client
-# from Database.HomeItem import HomeItem
+from Database.Client import Client
+from Database.HomeItem import HomeItem
 
 DATABASE_PATH = "/home/muroming/PythonProjects/SmartHouse/Database/SMARTHOUSE_DATABASE"
 

@@ -103,17 +103,21 @@ actions = {
 
 
 class SocketThread(Thread):
-    def __init__(self, client_socket, address):
+    def __init__(self, client_socket, address, serve_forever=False):
         Thread.__init__(self)
         self.client_socket = client_socket
         self.address = address
-        print("Starting server socket for address:", address)
+        self.serve_forever = serve_forever
+        print("Starting socket thread for address:", address)
         self.start()
 
     def run(self):
-        action = remove_string_fillers(self.client_socket.recv(1024).decode())
-        print(action, actions[action])
-        self.thread = actions[action](self.client_socket)
-        if self.thread is not None:
-            self.thread.join
+        loop = True
+        while loop:
+            action = remove_string_fillers(self.client_socket.recv(1024).decode())
+            print(action, actions[action])
+            self.thread = actions[action](self.client_socket)
+            loop = self.serve_forever
+            if loop and self.thread is not None:
+                self.thread.join()
         print("Socket thread done")
