@@ -75,5 +75,4 @@ def fill_string(data, length):
 s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
 s.connect(("127.0.0.1", serversocket_port))
 
-# send_pic_test(s, "me")
 send_pic_test(s, "ka")

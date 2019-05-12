@@ -41,10 +41,10 @@ def load_model():
 
 def create_fc_model(number_persons, compiled=True):
     model = Sequential()
-    model.add(Dense(512, kernel_initializer='glorot_uniform',
+    model.add(Dense(1024, kernel_initializer='glorot_uniform',
                     activation='relu', input_shape=(128,)))
     model.add(BatchNormalization())
-    model.add(Dense(512, kernel_initializer='glorot_uniform', activation='relu'))
+    model.add(Dense(1024, kernel_initializer='glorot_uniform', activation='relu'))
     model.add(BatchNormalization())
     model.add(Dense(number_persons, activation='sigmoid'))
 
@@ -56,21 +56,42 @@ def create_fc_model(number_persons, compiled=True):
     return model
 
 
-def extract_face_from_image(image):
-    cv_enc = _extract_face_from_image_cv(image)
-    if len(cv_enc) != 0:
-        cv_enc = cv_enc[0]
+def extract_face_from_image(image, mean_enc=False):
+    """
+    If mean_enc True then each face get own encoding and result is calculated as mean
+    else face boundaries counted as mean
+    """
+    cv_face = _extract_face_from_image_cv(image)
+    stock_face = _extract_face_from_image_stock(image)
+    print("CV face", cv_face, "Stock face", stock_face)
+    if mean_enc:
+        cv_enc = get_encodings_from_image_face(
+            image, cv_face) if np.any(cv_face != 0) else np.zeros((128,))
+        stock_enc = get_encodings_from_image_face(
+            image, stock_face) if np.any(stock_face != 0) else np.zeros((128,))
+        result_enc = np.add(cv_enc, stock_enc)
+        norm = np.sum([np.any(cv_enc != 0), np.any(stock_enc != 0)])
+        result_enc = result_enc / norm if norm != 0 else result_enc
     else:
-        cv_enc = np.zeros((128,))
-    stock_enc = _extract_face_from_image_stock(image)
-    if len(stock_enc) != 0:
-        stock_enc = stock_enc[0]
-    else:
-        stock_enc = np.zeros((128, ))
+        mean_face = np.add(cv_face, stock_face)
+        norm = np.sum([np.any(cv_face != 0), np.any(stock_face != 0)])
+        mean_face = mean_face / norm if norm != 0 else mean_face
+        mean_face = mean_face.astype(int)
+        print("Mean face", mean_face)
 
-    result_enc = np.add(cv_enc, stock_enc) / (len(cv_enc) + len(stock_enc))
+        result_enc = get_encodings_from_image_face(
+            image, mean_face) if np.any(mean_face != 0.0) else np.zeros((128,))
 
     return result_enc if np.any(result_enc != 0.0) else []
+
+
+def get_encodings_from_image_face(image, face):
+    return face_recognition.face_encodings(image, tuple(face))
+
+
+def _extract_face_from_image_stock(image, detection_type=0):
+    faces = face_recognition.face_locations(image, detection_type)
+    return faces if len(faces) != 0 else np.zeros((4,))
 
 
 def _extract_face_from_image_cv(image):
@@ -80,28 +101,10 @@ def _extract_face_from_image_cv(image):
         face_detector = cv2.CascadeClassifier(face_cv_path % '/haarcascade_frontalface_alt.xml')
 
     faces = face_detector.detectMultiScale(gray_img, scaleFactor=1.1, minNeighbors=5)
-    encoding = []
+    if len(faces) > 1:
+        faces = faces[0]
 
-    if len(faces) != 0:
-        faces = list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[1]), faces))
-        encoding = face_recognition.face_encodings(image, faces)
-
-    return encoding
-
-
-def _extract_face_from_image_stock(image, detection_type=0):
-    """
-    Params:
-        image - RGB 3 dim array
-    Output:
-        face encoding: 1-dim array (1, 128) or empty if face not found
-    """
-    encoding = []
-    face = face_recognition.face_locations(image, detection_type)
-    if len(face) != 0:  # top, right, bottom, left
-        encoding = face_recognition.face_encodings(image, face)
-
-    return encoding
+    return list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[1]), faces)) if len(faces) != 0 else np.zeros((4,))
 
 
 def save_person_encodings(encodings, name):
@@ -123,6 +126,10 @@ def person_id_to_bin(total, id):
 def train_classifier():
     print("Loading names")
     load_names()
+
+    if len(names) <= 1:
+        print("Can't train on %d person" % len(names))
+        return
 
     print("Getting encodings")
     X, y = [], []
