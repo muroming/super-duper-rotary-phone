@@ -11,7 +11,7 @@ QUSER_LOGIN = "user_login"
 QUSER_PASSWORD = "user_password"
 
 ip_address = ""
-serversocket_port = 8887
+serversocket_port = 8886
 rasp_ip = "192.168.43.26"
 rasp_sender_port = 34566
 
@@ -25,15 +25,15 @@ def main():
     serversocket.bind((ip_address, serversocket_port))
     serversocket.listen(10)
 
-    rasp_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-    rasp_socket.bind((ip_address, rasp_sender_port))
-    rasp_socket.listen(1)
-
-    # Raspberry connecting listener thread
-    print("Waiting for Raspberry listener thread...")
-    socket, address = rasp_socket.accept()
-    print("Starting Raspberry socket")
-    SocketThread(socket, address, serve_forever=True)
+    # rasp_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+    # rasp_socket.bind((ip_address, rasp_sender_port))
+    # rasp_socket.listen(1)
+    #
+    # # Raspberry connecting listener thread
+    # print("Waiting for Raspberry listener thread...")
+    # socket, address = rasp_socket.accept()
+    # print("Starting Raspberry socket")
+    # SocketThread(socket, address, serve_forever=True)
 
     print("Server started")
 

@@ -20,7 +20,7 @@ class ClientThreadResponse(Enum):
 
 def authorize_user(image, socket):
     name = Recognition.validate_person(image)
-    if name == "unknown" or len(name) == 0:
+    if len(name) == 0:
         print("User not found")
         socket.send(fill_string(Constants.error_response, 1024).encode())
         result = ClientThreadResponse.COUNTINUE_LISTENING

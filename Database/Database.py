@@ -42,6 +42,7 @@ FIND_HOME_ITEM_BY_ID = "SELECT * FROM %s WHERE id=?" % HOME_ITEMS_TABLE_NAME
 FIND_ACTION_BY_ID = "SELECT * FROM %s WHERE id=?" % ACTIONS_TABLE_NAME
 
 DELETE_USER_BY_LOGIN = "DELETE FROM %s WHERE user_login=?" % USERS_TABLE_NAME
+DELETE_ROLE_BY_NAME = "DELETE FROM %s WHERE role_name=?" % ROLES_TABLE_NAME
 
 GET_ALL_QUERY = "SELECT * FROM %s"
 
@@ -173,6 +174,14 @@ def delete_user_by_login(user_login):
     con.commit()
 
 
+def delete_role_by_name(role_name):
+    con = get_connection()
+    print("Deleting role", role_name)
+    cursor = con.cursor()
+    cursor.execute(DELETE_ROLE_BY_NAME, (role_name, ))
+    con.commit()
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args[0].lower() == "drop":
@@ -183,6 +192,8 @@ if __name__ == "__main__":
     elif args[0].lower() == "delete":
         if args[1].lower() == "userlogin":
             delete_user_by_login(args[2])
+        if args[1].lower() == "rolename":
+            delete_role_by_name(args[2])
 
     elif args[0].lower() == "get":
         if args[1].lower() == "items":

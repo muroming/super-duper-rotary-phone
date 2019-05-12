@@ -41,10 +41,10 @@ class ClientThread(Thread):
             while len(data) != img_size:
                 data += self.client_socket.recv(img_size).decode()
 
-            print("Quaq", len(data))
             data = base64.b64decode(data)
             image.write(data)
             image.close()
+            print("Photo num:", person_faces_amount - photos_to_recieve)
             photos_to_recieve -= 1
 
             img = cv2.imread(current_file)

@@ -15,7 +15,8 @@ model = None
 face_detector = None
 
 names = {}
-person_faces_amount = 10
+person_faces_amount = 300
+predict_threshold = 0.7  # [0; 1] propabilty requiered to validate person
 model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
 face_cv_path = "./NeuralNets/FaceRecognition/%s"
@@ -36,15 +37,15 @@ def load_model():
     global model
     print("Loading model")
     model = lm(model_path)
+    model._make_predict_function()
     print("Loaded")
+    model.summary()
 
 
 def create_fc_model(number_persons, compiled=True):
     model = Sequential()
-    model.add(Dense(1024, kernel_initializer='glorot_uniform',
+    model.add(Dense(32, kernel_initializer='glorot_uniform',
                     activation='relu', input_shape=(128,)))
-    model.add(BatchNormalization())
-    model.add(Dense(1024, kernel_initializer='glorot_uniform', activation='relu'))
     model.add(BatchNormalization())
     model.add(Dense(number_persons, activation='sigmoid'))
 
@@ -63,7 +64,6 @@ def extract_face_from_image(image, mean_enc=False):
     """
     cv_face = _extract_face_from_image_cv(image)
     stock_face = _extract_face_from_image_stock(image)
-    print("CV face", cv_face, "Stock face", stock_face)
     if mean_enc:
         cv_enc = get_encodings_from_image_face(
             image, cv_face) if np.any(cv_face != 0) else np.zeros((128,))
@@ -77,7 +77,6 @@ def extract_face_from_image(image, mean_enc=False):
         norm = np.sum([np.any(cv_face != 0), np.any(stock_face != 0)])
         mean_face = mean_face / norm if norm != 0 else mean_face
         mean_face = mean_face.astype(int)
-        print("Mean face", mean_face)
 
         result_enc = get_encodings_from_image_face(
             image, mean_face) if np.any(mean_face != 0.0) else np.zeros((128,))
@@ -148,7 +147,6 @@ def train_classifier():
 
     print("Preparing targets")
     y_bin = to_categorical(y)
-    print(y_bin)
 
     print("Getting model")
     model = create_fc_model(persons)
@@ -157,34 +155,41 @@ def train_classifier():
         EarlyStopping(patience=3)
     ]
 
+    ind = np.random.permutation(len(y_bin))
+    X = X[ind]
+    y_bin = y_bin[ind]
+    print(y_bin)
+
     model.fit(X, y_bin, validation_split=.3, epochs=10, shuffle=True, callbacks=callbacks)
 
     print("Done")
 
 
-def load_encodings(path):
-    global encodings
-    global names
-    for file in os.listdir(path):
-        enc = np.load(os.path.join(path, file))
-        name = path.split('.')[0]
-        for e in enc:
-            encodings.append(e)
-            names.append(name)
-
-
 def validate_person(image, detection_type=0):  # Assuming image is RGB
-    # if model is None:
-    #     raise RuntimeError("No model loaded")
-    #
-    # faces = face_recognition.face_locations(image, detection_type)
-    # encoding = face_recognition.face_encodings(image, faces[0])
-    #
-    # predict = model.predict(encoding)
-    #
-    # return names[np.argmax(predict)]
-    return "Nikita"
+    if model is None:
+        load_model()
+
+    encoding = extract_face_from_image(image)
+
+    if len(encoding) == 0:
+        return ""
+    encoding = np.array(encoding[0]).reshape((1, 128))
+
+    print(encoding.shape)
+    predict = model.predict(encoding)
+    print(predict)
+
+    if np.amax(predict) >= predict_threshold:
+        return names[np.argmax(predict)]
+    else:
+        return ""
 
 
 if os.path.exists(model_path):
     load_model()
+
+
+# train_classifier()
+# nik = np.load("./NeuralNets/FaceRecognition/encodings/nik.npy")
+# sh = np.load("./NeuralNets/FaceRecognition/encodings/shamil10031.npy")
+# model.predict(nik[0:2])
