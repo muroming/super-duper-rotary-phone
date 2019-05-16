@@ -3,20 +3,19 @@ from threading import Thread
 
 import face_recognition
 import numpy as np
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import BatchNormalization, Dense
-from keras.models import Sequential
-from keras.models import load_model as lm
-from keras.utils import to_categorical
 
 import cv2
+from NeuralNets.FaceRecognition.Net import BayesianModel
 
 model = None
+x_placeholder = None
+model_probs = None
 face_detector = None
 
-names = {}
+names = []
 person_faces_amount = 300
-predict_threshold = 0.9  # [0; 1] propabilty requiered to validate person
+n_iters = 500
+predict_threshold = 0.42
 model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
 face_cv_path = "./NeuralNets/FaceRecognition/%s"
@@ -39,26 +38,13 @@ class TrainingThread(Thread):
 
 def load_model():
     global model
-    print("Loading model")
-    model = lm(model_path)
-    model._make_predict_function()
-    print("Loaded")
-    model.summary()
+    model = BayesianModel([None, 128], [None], len(names), predict_threshold,
+                          n_iter_predict=n_iters, model_path=model_path, label_names=names)
+    print("Model created")
 
 
-def create_fc_model(number_persons, compiled=True):
-    model = Sequential()
-    model.add(Dense(128, kernel_initializer='glorot_uniform',
-                    activation='relu', input_shape=(128,)))
-    model.add(BatchNormalization())
-    model.add(Dense(number_persons, activation='sigmoid'))
-
-    model.summary()
-
-    if compiled:
-        model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-
-    return model
+def train_model(number_persons, X_data, y_data):
+    model.fit(X_data, y_data)
 
 
 def extract_face_from_image(image, mean_enc=False):
@@ -124,10 +110,13 @@ def load_names():
     print("Names loaded", names)
 
 
-def person_id_to_bin(total, id):
-    res = np.zeros(total)
-    res[id] = 1
-    return res[0]
+def person_id_to_bin(y):
+    unique, counts = np.unique(y, return_counts=True)
+    res = []
+    for u, c in zip(unique, counts):
+        res.append(np.ones(c, dtype=np.int32) * u)
+
+    return np.concatenate(np.array(res), axis=0)
 
 
 def train_classifier():
@@ -154,23 +143,10 @@ def train_classifier():
         persons += 1
 
     print("Preparing targets")
-    y_bin = to_categorical(y)
+    y_bin = person_id_to_bin(y)
 
-    print("Getting model")
-    model = create_fc_model(persons)
-    callbacks = [
-        ModelCheckpoint(filepath=model_path, save_best_only=True),
-        EarlyStopping(patience=3)
-    ]
-
-    ind = np.random.permutation(len(y_bin))
-    X = X[ind]
-    y_bin = y_bin[ind]
-    print(y_bin)
-
-    model.fit(X, y_bin, validation_split=.3, epochs=10, shuffle=True, callbacks=callbacks)
-
-    print("Done")
+    print("Training model")
+    train_model(persons, X, y_bin)
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
@@ -186,19 +162,23 @@ def validate_person(image, detection_type=0):  # Assuming image is RGB
 
     print(encoding.shape)
     predict = model.predict(encoding)
-    print(predict)
 
-    if np.amax(predict) >= predict_threshold:
-        return names[np.argmax(predict)]
-    else:
-        return ""
+    return predict
 
 
-if os.path.exists(model_path):
-    load_model()
+load_names()
+load_model()
+
+train_classifier()
+nik = np.load("./NeuralNets/FaceRecognition/encodings/nik.npy")
+sh = np.load("./NeuralNets/FaceRecognition/encodings/shamil10031.npy")
+ta = np.load("./NeuralNets/FaceRecognition/encodings/tanya.npy")
 
 
-# train_classifier()
-# nik = np.load("./NeuralNets/FaceRecognition/encodings/nik.npy")
-# sh = np.load("./NeuralNets/FaceRecognition/encodings/shamil10031.npy")
-# model.predict(nik[0:2])
+model.predict(ta[2].reshape((1, 128)))
+
+obama = cv2.imread("./NeuralNets/FaceRecognition/test_obama.jpeg")
+obama = cv2.cvtColor(obama, cv2.COLOR_BGR2RGB)
+enc = np.array(extract_face_from_image(obama))
+
+model.predict(enc.reshape((1, 128)))

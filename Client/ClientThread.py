@@ -6,7 +6,8 @@ from threading import Thread
 import Constants
 import cv2
 from Client.ClientThreadCallbacks import (ClientThreadResponse,
-                                          add_user_photo_callback)
+                                          add_user_photo_callback,
+                                          authorize_user)
 from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 from StringUtils import remove_string_fillers
 
@@ -39,11 +40,18 @@ class ClientThread(Thread):
             image = open(current_file, 'wb')
             data = ""
             while len(data) != img_size:
+                print(len(data), img_size)
                 data += self.client_socket.recv(img_size).decode()
 
-            data = base64.b64decode(data)
-            image.write(data)
+            print(len(data), img_size)
+            try:
+                data = base64.b64decode(data)
+                image.write(data)
+            except Exception as e:
+                print("Exception while decode", e)
+
             image.close()
+
             print("Photo num:", person_faces_amount - photos_to_recieve)
             photos_to_recieve -= 1
 
@@ -52,6 +60,8 @@ class ClientThread(Thread):
             # TODO: pass save parameter
             if self.image_callback.__name__ == add_user_photo_callback.__name__:
                 self.callback_args["photos"] = photos_to_recieve
+            elif self.image_callback.__name__ == authorize_user.__name__:
+                self.callback_args["photo_attempts"] -= 1
             socket_status = self.image_callback(img, self.client_socket, **self.callback_args)
             os.remove(current_file)
 

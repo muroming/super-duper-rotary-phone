@@ -15,7 +15,9 @@ def fetch_home_info(client_socket):
     print("Fething home data from Raspberry")
     data = ServerToRasp.fetch_home_info()
     if len(data) == 0:
-        data = Constants.error_response
+        data = Constants.error_response + data
+    else:
+        data = Constants.successful_response + data
     client_socket.send(data.encode())
 
 
@@ -79,7 +81,7 @@ def logout_user(client_socket):
 
 def validate_user(client_socket):
     print("Validating user")
-    return ClientThread(client_socket, ClientThreadCallbacks.authorize_user)
+    return ClientThread(client_socket, ClientThreadCallbacks.authorize_user, photo_attempts=6)
 
 
 def toggle_item_power(client_socket):

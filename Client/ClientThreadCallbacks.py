@@ -18,7 +18,7 @@ class ClientThreadResponse(Enum):
     COUNTINUE_LISTENING = 1
 
 
-def authorize_user(image, socket):
+def authorize_user(image, socket, photo_attempts):
     name = Recognition.validate_person(image)
     if len(name) == 0:
         print("User not found")
@@ -29,6 +29,9 @@ def authorize_user(image, socket):
         # Database.insert_user_action(name, "AUTHORIZED WITH FACE",datetime.datetime.now())
         result = ClientThreadResponse.CLOSE_SOCKET
         socket.send(fill_string(Constants.successful_response, 1024).encode())
+
+    if photo_attempts == 0:
+        result = ClientThreadResponse.CLOSE_SOCKET
     return result
 
 
@@ -53,7 +56,7 @@ def add_user_photo_callback(image, socket, username, photos):
         print("Currect amount of faces for user", username, "%d/%d" %
               (user_faces.shape[0], Recognition.person_faces_amount))
 
-        if photos == 0:
+        if photos == 290:
             os.remove(faces_path)
             np.save(os.path.join(dataset_folder, "%s.npy" % username), user_faces)
             print("Person saved!")
