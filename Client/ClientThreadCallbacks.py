@@ -42,7 +42,7 @@ def add_user_photo_callback(image, socket, username, photos):
     Output:
         response: AddUserResponse
     """
-    encoding = Recognition.extract_face_from_image(image)
+    encoding = Recognition.extract_face_enc_from_image(image)
     if len(encoding) == 0:
         print("Face not found!")
         return ClientThreadResponse.COUNTINUE_LISTENING
@@ -56,7 +56,7 @@ def add_user_photo_callback(image, socket, username, photos):
         print("Currect amount of faces for user", username, "%d/%d" %
               (user_faces.shape[0], Recognition.person_faces_amount))
 
-        if photos == 290:
+        if photos == 0:
             os.remove(faces_path)
             np.save(os.path.join(dataset_folder, "%s.npy" % username), user_faces)
             print("Person saved!")

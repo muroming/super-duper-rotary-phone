@@ -4,7 +4,8 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import BatchNormalization, Dropout, Input
+from tensorflow.keras.layers import (Add, BatchNormalization, Dropout, Flatten,
+                                     Input, MaxPooling2D)
 from tensorflow.keras.models import Model
 
 np.random.seed(10)
@@ -21,6 +22,8 @@ class BayesianModel(object):
         self.x = tf.placeholder(shape=input_shape, dtype=input_dtype)
         self.y = tf.placeholder(shape=output_shape, dtype=output_dtype)
         self.n = tf.placeholder(shape=[], dtype=tf.float32)
+        self.logits = self.model(self.x)
+        self.probs = tf.nn.softmax(self.logits, axis=1)
         self.n_iter_train = n_iter_train
         self.batch_size = batch_size
         self.n_iter_predict = n_iter_predict
@@ -32,6 +35,12 @@ class BayesianModel(object):
         #     saver = tf.train.Saver()
         #     saver.restore(self.session, model_path)
         #     print("Model loaded")
+
+    # def save_model(self, path):
+        # saver = tf.train.Saver()
+        # saved_path = saver.save(self.session, path)
+        #
+        # print("Saved to", saved_path)
 
     def predict(self, X):
         res = []
@@ -55,9 +64,7 @@ class BayesianModel(object):
         return self.session.run(self.probs, feed_dict={self.x: X})
 
     def fit(self, X, y):
-        logits = self.model(self.x)
-        self.probs = tf.nn.softmax(logits, axis=1)
-        labels_distribution = tfp.distributions.Categorical(logits=logits)
+        labels_distribution = tfp.distributions.Categorical(logits=self.logits)
         log_probs = labels_distribution.log_prob(self.y)
 
         neg_log_likelihood = -tf.reduce_mean(log_probs)
@@ -98,16 +105,53 @@ class BayesianModel(object):
 
             print("Val accuracy:", temp_acc)
 
+        print("Last accuracy:", temp_acc)
+
     def __build_model(self, number_persons):
+
         inputs = Input(shape=(128,))
 
-        x = tfp.layers.DenseFlipout(64, activation='relu')(inputs)
-        x = Dropout(0.5)(x)
-        x = tfp.layers.DenseFlipout(32, activation='relu')(inputs)
-        x = BatchNormalization()(x)
-        outputs = tfp.layers.DenseFlipout(number_persons, activation=None)(x)
+        fc1 = tfp.layers.DenseFlipout(512, activation='relu')(inputs)
+        dropped1 = Dropout(0.5)(fc1)
+        fc2 = tfp.layers.DenseFlipout(512, activation='relu')(dropped1)
+        bn1 = BatchNormalization()(fc2)
+
+        outputs = tfp.layers.DenseFlipout(number_persons, activation=None)(bn1)
+        # cf11 = tfp.layers.Convolution2DFlipout(
+        #     32, (3, 3), activation="relu", padding="same")(inputs)
+        # mp11 = MaxPooling2D()(cf11)
+        #
+        # cf21 = tfp.layers.Convolution2DFlipout(64, (3, 3), activation="relu", padding="same")(mp11)
+        # mp21 = MaxPooling2D()(cf21)
+        #
+        # cf31 = tfp.layers.Convolution2DFlipout(64, (3, 3), activation="relu", padding="same")(mp21)
+        # cf32 = tfp.layers.Convolution2DFlipout(64, (3, 3), activation="relu", padding="same")(cf31)
+        # bn31 = BatchNormalization()(cf32)
+        # mp31 = MaxPooling2D()(bn31)
+        #
+        # cf41 = tfp.layers.Convolution2DFlipout(128, (3, 3), activation="relu", padding="same")(mp31)
+        # cf42 = tfp.layers.Convolution2DFlipout(128, (3, 3), activation="relu", padding="same")(cf41)
+        # bn41 = BatchNormalization()(cf42)
+        # mp41 = MaxPooling2D()(bn41)
+        #
+        # cf51 = tfp.layers.Convolution2DFlipout(128, (3, 3), activation="relu", padding="same")(mp41)
+        # bn51 = BatchNormalization()(cf51)
+        # mp51 = MaxPooling2D()(bn51)
+        # mp52 = MaxPooling2D()(mp51)
+        #
+        # flat = Flatten()(mp52)
+        # fc1 = tfp.layers.DenseFlipout(128, activation="relu")(flat)
+        #
+        # # flat_cf32 = Flatten()(cf32)
+        # # fc_res = tfp.layers.DenseFlipout(128, activation="relu")(flat_cf32)
+        # #
+        # # flat_res_and_fc1 = Add()([fc1, fc_res])
+        # dropped = Dropout(0.5)(fc1)
+        # fc2 = tfp.layers.DenseFlipout(512, activation="relu")(dropped)
+        # outputs = tfp.layers.DenseFlipout(number_persons, activation=None)(fc2)
 
         model = Model(inputs, outputs)
+
         model.summary()
 
         return model

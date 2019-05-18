@@ -1,10 +1,17 @@
 import base64
 import os
+import random
 import socket as sk
 import uuid
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 import cv2
+from NeuralNets.FaceRecognition.Recognition import extract_face_from_image
 from Server import serversocket_port
+
+dataset_path = "/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset"
 
 
 def login_user_test(s):
@@ -49,8 +56,8 @@ def authorize_user_test(s):
             bytes = f.read()
             current_chunk = 0
             while current_chunk < len(bytes) // image_chunk_size:
-                data = bytes[current_chunk
-                             * image_chunk_size:(current_chunk + 1) * image_chunk_size]
+                data = bytes[current_chunk *
+                             image_chunk_size:(current_chunk + 1) * image_chunk_size]
                 print("Bytes sent:", len(bytes))
                 s.send(data)
                 current_chunk += 1
@@ -72,7 +79,53 @@ def fill_string(data, length):
     return data + "^" * (length - len(data))
 
 
-s = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-s.connect(("127.0.0.1", serversocket_port))
+def create_user_dataset(n_photos, user_name):
+    saved = 0
+    cap = cv2.VideoCapture(0)
+    os.mkdir(os.path.join(dataset_path, user_name))
+    while saved < n_photos:
+        ret, frame = cap.read()
 
-send_pic_test(s, "ka")
+        if not ret:
+            break
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        face = extract_face_from_image(frame)
+        if face is not None:
+            cols, rows, ch = face.shape
+
+            M = cv2.getRotationMatrix2D((cols / 2, rows / 2), random.randint(-20, 20), 1)
+
+            plt.imsave(os.path.join(dataset_path, user_name, user_name + str(saved) + ".jpg"), face)
+            plt.imsave(os.path.join(dataset_path, user_name, user_name + str(saved) + "rot.jpg"),
+                       cv2.warpAffine(face, M, (cols, rows)))
+
+            saved += 1
+
+
+# s=sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+# s.connect(("127.0.0.1", serversocket_port))
+#
+# send_pic_test(s, "ka")
+# create_user_dataset(2000, "tan")
+
+saved = 0
+for mock in os.listdir("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/"):
+    print(mock)
+    img = cv2.imread(
+        "/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" + mock)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    face = extract_face_from_image(img)
+    if face is not None:
+        cols, rows, ch = face.shape
+
+        M = cv2.getRotationMatrix2D((cols / 2, rows / 2), random.randint(-20, 20), 1)
+
+        plt.imsave("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" +
+                   mock + str(saved) + ".jpg", face)
+        plt.imsave("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" +
+                   mock + str(saved) + "rot.jpg", cv2.warpAffine(face, M, (cols, rows)))
+        os.remove("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" + mock)
+
+        saved += 1
+        print(saved)

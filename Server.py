@@ -5,9 +5,9 @@ import ServerToRasp
 from SocketThread import SocketThread
 
 ip_address = ""
-serversocket_port = 8881
+serversocket_port = 8888
 rasp_ip = "192.168.43.26"
-rasp_sender_port = 34561
+rasp_sender_port = 34568
 
 serversocket = None
 rasp_socket = None

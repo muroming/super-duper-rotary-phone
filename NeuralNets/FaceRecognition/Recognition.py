@@ -2,6 +2,7 @@ import os
 from threading import Thread
 
 import face_recognition
+import matplotlib.pyplot as plt
 import numpy as np
 
 import cv2
@@ -13,11 +14,15 @@ model_probs = None
 face_detector = None
 
 names = []
-person_faces_amount = 300
-n_iters = 500
-predict_threshold = 0.42
-model_path = "./NeuralNets/FaceRecognition/fc_model.h5"
+person_faces_amount = 150
+neural_net_input_shape = [300, 300]
+n_iters_predict = 500
+n_iters_train = 14
+predict_threshold = 0.85
+batch_size = 32
+model_path = "./NeuralNets/FaceRecognition/fc_model.ckpt"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
+dataset_path = "/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset"
 face_cv_path = "./NeuralNets/FaceRecognition/%s"
 encodings_name = "%s.npy"
 
@@ -29,25 +34,44 @@ class TrainingThread(Thread):
         self.run()
 
     def run(self):
-        try:
-            train_classifier()
-        except Exception as e:
-            print("Training failed with exception")
-            print(e)
+        # try:
+        train_classifier()
+        # except Exception as e:
+        #     print("Training failed with exception")
+        #     print(e)
 
 
 def load_model():
     global model
-    model = BayesianModel([None, 128], [None], len(names), predict_threshold,
-                          n_iter_predict=n_iters, model_path=model_path, label_names=names)
+    load_names()
+    model = BayesianModel([None, 128], [None], len(names), predict_threshold, n_iter_train=n_iters_train,
+                          n_iter_predict=n_iters_predict, model_path=model_path, label_names=names)
     print("Model created")
+    TrainingThread()
 
 
 def train_model(number_persons, X_data, y_data):
     model.fit(X_data, y_data)
 
 
-def extract_face_from_image(image, mean_enc=False):
+def extract_face_from_image(image):
+    cv_face = _extract_face_from_image_cv(image)
+    stock_face = _extract_face_from_image_stock(image)
+    mean_face = np.add(cv_face, stock_face)
+    norm = np.sum([np.any(cv_face != 0), np.any(stock_face != 0)])
+    mean_face = mean_face / norm if norm != 0 else mean_face
+    mean_face = mean_face.astype(int)
+
+    print(mean_face)
+
+    if np.any(mean_face != 0.0):
+        mean_face = mean_face[0]
+        return image[mean_face[0]:mean_face[2], mean_face[3]:mean_face[1], :]
+    else:
+        return None
+
+
+def extract_face_enc_from_image(image, mean_enc=False):
     """
     If mean_enc True then each face get own encoding and result is calculated as mean
     else face boundaries counted as mean
@@ -94,7 +118,7 @@ def _extract_face_from_image_cv(image):
         faces = faces[0]
 
     try:
-        return list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[1]), faces)) if len(faces) != 0 else np.zeros((4,))
+        return list(map(lambda x: (x[1], x[0] + x[2], x[1] + x[3], x[0]), faces)) if len(faces) != 0 else np.zeros((4,))
     except IndexError:
         print("Index error faces CV", faces, type(faces))
         return np.zeros((4,))
@@ -104,9 +128,14 @@ def save_person_encodings(encodings, name):
     np.save(encodings, os.path.join(encodings_path, encodings_name % name))
 
 
+# def load_names():
+#     global names
+#     names = [name[:-4] for name in os.listdir(encodings_path)]
+#     print("Names loaded", names)
+
 def load_names():
     global names
-    names = [name[:-4] for name in os.listdir(encodings_path)]
+    names = ["nik", "tan", "mock"]  # os.listdir(dataset_path)
     print("Names loaded", names)
 
 
@@ -120,33 +149,77 @@ def person_id_to_bin(y):
 
 
 def train_classifier():
-    print("Loading names")
-    load_names()
+    if len(names) == 0:
+        print("Loading names")
+        load_names()
 
     if len(names) <= 1:
         print("Can't train on %d person" % len(names))
         return
 
-    print("Getting encodings")
+    print("Getting images")
+    # X, y = np.load(dataset_path + "/X.npy")[:person_faces_amount], np.load(dataset_path + "/y.npy")[:person_faces_amount]
     X, y = [], []
     persons = 0
-    for person in os.listdir(encodings_path):
-        name = person[:-4]
-        print("Encodings for %s" % name)
-        enc = np.load(os.path.join(encodings_path, person))
-        if len(X) != 0:
-            X = np.vstack((X, enc))
-        else:
-            X = enc
-        names[persons] = name
-        y.extend([persons for _ in range(enc.shape[0])])
-        persons += 1
+    for person in names:
+        person_path = os.path.join(dataset_path, person)
+        for i, image in enumerate(os.listdir(person_path)):
+            print(person, i)
+            if i == person_faces_amount:
+                break
+            img = cv2.imread(os.path.join(person_path, image))
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            enc = face_recognition.face_encodings(img, [(0, img.shape[1], img.shape[0], 0)])
+            # img = img / 255.
+            # img = cv2.resize(img, tuple(neural_net_input_shape))
+            enc = np.array(enc).reshape((128,))
+            X.append(enc)
+            y.append(persons)
 
+        persons += 1
     print("Preparing targets")
-    y_bin = person_id_to_bin(y)
+    X = np.array(X)
+    y = person_id_to_bin(y)
+
+    np.save(dataset_path + "/X.npy", X)
+    np.save(dataset_path + "/y.npy", y)
+
+    print(X.shape, y.shape)
+    print(y)
 
     print("Training model")
-    train_model(persons, X, y_bin)
+    train_model(len(names), X, y)
+
+
+# def train_classifier():
+#     if len(names) == 0:
+#         print("Loading names")
+#         load_names()
+#
+#     if len(names) <= 1:
+#         print("Can't train on %d person" % len(names))
+#         return
+#
+#     print("Getting encodings")
+#     X, y = [], []
+#     persons = 0
+#     for person in os.listdir(encodings_path):
+#         name = person[:-4]
+#         print("Encodings for %s" % name)
+#         enc = np.load(os.path.join(encodings_path, person))
+#         if len(X) != 0:
+#             X = np.vstack((X, enc))
+#         else:
+#             X = enc
+#         names[persons] = name
+#         y.extend([persons for _ in range(enc.shape[0])])
+#         persons += 1
+#
+#     print("Preparing targets")
+#     y = person_id_to_bin(y)
+#
+#     print("Training model")
+#     train_model(persons, X, y)
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
@@ -166,19 +239,13 @@ def validate_person(image, detection_type=0):  # Assuming image is RGB
     return predict
 
 
-load_names()
 load_model()
 
-train_classifier()
-nik = np.load("./NeuralNets/FaceRecognition/encodings/nik.npy")
-sh = np.load("./NeuralNets/FaceRecognition/encodings/shamil10031.npy")
-ta = np.load("./NeuralNets/FaceRecognition/encodings/tanya.npy")
+img = cv2.imread(os.path.join(dataset_path, "nik", "nik973rot.jpg"))
+enc = face_recognition.face_encodings(img, [(0, img.shape[1], img.shape[0], 0)])
+enc = np.array(enc).reshape((128,))
+model.predict([enc])
 
-
-model.predict(ta[2].reshape((1, 128)))
-
-obama = cv2.imread("./NeuralNets/FaceRecognition/test_obama.jpeg")
-obama = cv2.cvtColor(obama, cv2.COLOR_BGR2RGB)
-enc = np.array(extract_face_from_image(obama))
-
-model.predict(enc.reshape((1, 128)))
+img = cv2.imread(os.path.join(dataset_path, "testfaces", "suprised-man.jpg"))
+enc = extract_face_enc_from_image(img)
+model.predict(enc)

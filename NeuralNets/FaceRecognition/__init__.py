@@ -1,3 +1,3 @@
-# from NeuralNets.FaceRecognition.Recognition import load_names
+# from NeuralNets.FaceRecognition.Recognition import load_model
 #
-# load_names()
+# load_model()

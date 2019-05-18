@@ -1,5 +1,6 @@
 import base64
 import os
+import re
 import uuid
 from threading import Thread
 
@@ -12,6 +13,18 @@ from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 from StringUtils import remove_string_fillers
 
 cache_folder = "cache"
+
+
+def safe_decode(data):
+    """Decode base64, padding being optional.
+
+    :param data: Base64 data as an ASCII byte string
+    :returns: The decoded byte string.
+
+    """
+    if len(data) % 4 != 0:
+        raise RuntimeError("Wrong padding but I got u <3")
+    return base64.b64decode(data)
 
 
 class ClientThread(Thread):
@@ -38,10 +51,10 @@ class ClientThread(Thread):
 
             current_file = os.path.join(".", cache_folder, "%s.jpg" % str(uuid.uuid4()))
             image = open(current_file, 'wb')
-            data = ""
+            data = b""
             while len(data) != img_size:
                 print(len(data), img_size)
-                data += self.client_socket.recv(img_size).decode()
+                data += self.client_socket.recv(img_size - len(data))
 
             print(len(data), img_size)
             try:
@@ -49,6 +62,8 @@ class ClientThread(Thread):
                 image.write(data)
             except Exception as e:
                 print("Exception while decode", e)
+                image.close()
+                continue
 
             image.close()
 
@@ -63,7 +78,7 @@ class ClientThread(Thread):
             elif self.image_callback.__name__ == authorize_user.__name__:
                 self.callback_args["photo_attempts"] -= 1
             socket_status = self.image_callback(img, self.client_socket, **self.callback_args)
-            os.remove(current_file)
+            # os.remove(current_file)
 
         if os.path.exists(current_file):
             os.remove(current_file)
