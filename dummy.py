@@ -107,25 +107,25 @@ def create_user_dataset(n_photos, user_name):
 # s.connect(("127.0.0.1", serversocket_port))
 #
 # send_pic_test(s, "ka")
-# create_user_dataset(2000, "tan")
+create_user_dataset(5, "sha")
 
-saved = 0
-for mock in os.listdir("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/"):
-    print(mock)
-    img = cv2.imread(
-        "/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" + mock)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    face = extract_face_from_image(img)
-    if face is not None:
-        cols, rows, ch = face.shape
-
-        M = cv2.getRotationMatrix2D((cols / 2, rows / 2), random.randint(-20, 20), 1)
-
-        plt.imsave("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" +
-                   mock + str(saved) + ".jpg", face)
-        plt.imsave("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" +
-                   mock + str(saved) + "rot.jpg", cv2.warpAffine(face, M, (cols, rows)))
-        os.remove("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" + mock)
-
-        saved += 1
-        print(saved)
+# saved = 0
+# for mock in os.listdir("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/"):
+#     print(mock)
+#     img = cv2.imread(
+#         "/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" + mock)
+#     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#     face = extract_face_from_image(img)
+#     if face is not None:
+#         cols, rows, ch = face.shape
+#
+#         M = cv2.getRotationMatrix2D((cols / 2, rows / 2), random.randint(-20, 20), 1)
+#
+#         plt.imsave("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" +
+#                    mock + str(saved) + ".jpg", face)
+#         plt.imsave("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" +
+#                    mock + str(saved) + "rot.jpg", cv2.warpAffine(face, M, (cols, rows)))
+#         os.remove("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/" + mock)
+#
+#         saved += 1
+#         print(saved)

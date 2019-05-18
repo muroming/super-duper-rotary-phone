@@ -234,8 +234,7 @@ def drop_table(name):
     con.commit()
 
 
-if __name__ == "__main__":
-    args = sys.argv[1:]
+def parse_args(args):
     if args[0].lower() == "drop":
         drop_database()
     elif args[0].lower() == "create":

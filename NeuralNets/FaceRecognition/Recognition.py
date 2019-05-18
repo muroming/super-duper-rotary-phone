@@ -130,7 +130,7 @@ def save_person_encodings(encodings, name):
 
 def load_names():
     global names
-    removes = ["testfaces"]
+    removes = ["testfaces", "sha"]
     names = [name for name in os.listdir(
         dataset_path) if name not in removes and not ".npy" in name]
 
@@ -209,13 +209,13 @@ def validate_person(image, detection_type=0):  # Assuming image is RGB
     return predict
 
 
-load_model()
+# load_model()
 #
 # img = cv2.imread(os.path.join(dataset_path, "nik", "nik935rot.jpg"))
 # enc = face_recognition.face_encodings(img, [(0, img.shape[1], img.shape[0], 0)])
 # enc = np.array(enc).reshape((128,))
 # model.predict([enc])
 #
-# img = cv2.imread(os.path.join(dataset_path, "mock", "mock1.jpg"))
+# img = cv2.imread(os.path.join(dataset_path, "sha", "sha0rot.jpg"))
 # enc = extract_face_enc_from_image(img)
 # model.predict(enc)

@@ -117,41 +117,9 @@ class BayesianModel(object):
         bn1 = BatchNormalization()(fc2)
 
         outputs = tfp.layers.DenseFlipout(number_persons, activation=None)(bn1)
-        # cf11 = tfp.layers.Convolution2DFlipout(
-        #     32, (3, 3), activation="relu", padding="same")(inputs)
-        # mp11 = MaxPooling2D()(cf11)
-        #
-        # cf21 = tfp.layers.Convolution2DFlipout(64, (3, 3), activation="relu", padding="same")(mp11)
-        # mp21 = MaxPooling2D()(cf21)
-        #
-        # cf31 = tfp.layers.Convolution2DFlipout(64, (3, 3), activation="relu", padding="same")(mp21)
-        # cf32 = tfp.layers.Convolution2DFlipout(64, (3, 3), activation="relu", padding="same")(cf31)
-        # bn31 = BatchNormalization()(cf32)
-        # mp31 = MaxPooling2D()(bn31)
-        #
-        # cf41 = tfp.layers.Convolution2DFlipout(128, (3, 3), activation="relu", padding="same")(mp31)
-        # cf42 = tfp.layers.Convolution2DFlipout(128, (3, 3), activation="relu", padding="same")(cf41)
-        # bn41 = BatchNormalization()(cf42)
-        # mp41 = MaxPooling2D()(bn41)
-        #
-        # cf51 = tfp.layers.Convolution2DFlipout(128, (3, 3), activation="relu", padding="same")(mp41)
-        # bn51 = BatchNormalization()(cf51)
-        # mp51 = MaxPooling2D()(bn51)
-        # mp52 = MaxPooling2D()(mp51)
-        #
-        # flat = Flatten()(mp52)
-        # fc1 = tfp.layers.DenseFlipout(128, activation="relu")(flat)
-        #
-        # # flat_cf32 = Flatten()(cf32)
-        # # fc_res = tfp.layers.DenseFlipout(128, activation="relu")(flat_cf32)
-        # #
-        # # flat_res_and_fc1 = Add()([fc1, fc_res])
-        # dropped = Dropout(0.5)(fc1)
-        # fc2 = tfp.layers.DenseFlipout(512, activation="relu")(dropped)
-        # outputs = tfp.layers.DenseFlipout(number_persons, activation=None)(fc2)
 
         model = Model(inputs, outputs)
 
-        model.summary()
+        # model.summary()
 
         return model

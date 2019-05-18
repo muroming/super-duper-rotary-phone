@@ -1,6 +1,5 @@
 import base64
 import os
-import re
 import uuid
 from threading import Thread
 
@@ -16,7 +15,8 @@ cache_folder = "cache"
 
 
 def safe_decode(data):
-    """Decode base64, padding being optional.
+    """
+    Decode base64, padding being optional.
 
     :param data: Base64 data as an ASCII byte string
     :returns: The decoded byte string.
@@ -78,7 +78,7 @@ class ClientThread(Thread):
             elif self.image_callback.__name__ == authorize_user.__name__:
                 self.callback_args["photo_attempts"] -= 1
             socket_status = self.image_callback(img, self.client_socket, **self.callback_args)
-            # os.remove(current_file)
+            os.remove(current_file)
 
         if os.path.exists(current_file):
             os.remove(current_file)
