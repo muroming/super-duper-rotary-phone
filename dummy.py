@@ -107,7 +107,7 @@ def create_user_dataset(n_photos, user_name):
 # s.connect(("127.0.0.1", serversocket_port))
 #
 # send_pic_test(s, "ka")
-create_user_dataset(5, "sha")
+# create_user_dataset(5, "sha")
 
 # saved = 0
 # for mock in os.listdir("/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset/mock/"):

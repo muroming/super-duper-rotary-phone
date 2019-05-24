@@ -10,7 +10,7 @@ from NeuralNets.FaceRecognition import Recognition
 from StringUtils import fill_string
 
 cache_folder = "cache"
-dataset_folder = "NeuralNets/FaceRecognition/encodings"
+dataset_folder = "NeuralNets/FaceRecognition/dataset"
 
 
 class ClientThreadResponse(Enum):
@@ -42,29 +42,38 @@ def add_user_photo_callback(image, socket, username, photos):
     Output:
         response: AddUserResponse
     """
+
     encoding = Recognition.extract_face_enc_from_image(image)
-    if len(encoding) == 0:
-        print("Face not found!")
-        return ClientThreadResponse.COUNTINUE_LISTENING
-
-    print("Face found!")
-
     faces_path = os.path.join(cache_folder, "%s_faces.npy" % username)
+
     if os.path.exists(faces_path):
         user_faces = np.load(faces_path)  # Collect how many faces user has
-        user_faces = np.vstack((user_faces, encoding))
-        print("Currect amount of faces for user", username, "%d/%d" %
-              (user_faces.shape[0], Recognition.person_faces_amount))
 
-        if photos == 0:
+    if len(encoding) == 0:
+        print("Face not found!")
+        result = ClientThreadResponse.COUNTINUE_LISTENING
+    else:
+        print("Face found!")
+
+        if os.path.exists(faces_path):
+            user_faces = np.vstack((user_faces, encoding))
+            print("Currect amount of faces for user", username, "%d/%d" %
+                  (user_faces.shape[0], Recognition.person_faces_amount))
+            np.save(faces_path, user_faces)
+        else:
+            np.save(faces_path, encoding)
+
+        result = ClientThreadResponse.COUNTINUE_LISTENING
+
+    if photos == 0:
+        print("Trying to save person")
+        if os.path.exists(faces_path):
             os.remove(faces_path)
-            np.save(os.path.join(dataset_folder, "%s.npy" % username), user_faces)
+            if not os.path.exists(os.path.join(dataset_folder, username)):
+                os.mkdir(os.path.join(dataset_folder, username))
+            np.save(os.path.join(dataset_folder, username, "%s.npy" % username), user_faces)
             print("Person saved!")
             Recognition.TrainingThread()
-            return ClientThreadResponse.CLOSE_SOCKET
-        else:
-            np.save(faces_path, user_faces)
-    else:
-        np.save(faces_path, encoding)
+        result = ClientThreadResponse.CLOSE_SOCKET
 
-    return ClientThreadResponse.COUNTINUE_LISTENING
+    return result

@@ -53,15 +53,14 @@ class ClientThread(Thread):
             image = open(current_file, 'wb')
             data = b""
             while len(data) != img_size:
-                print(len(data), img_size)
                 data += self.client_socket.recv(img_size - len(data))
 
-            print(len(data), img_size)
             try:
                 data = base64.b64decode(data)
                 image.write(data)
             except Exception as e:
                 print("Exception while decode", e)
+                print(data)
                 image.close()
                 continue
 
@@ -71,17 +70,25 @@ class ClientThread(Thread):
             photos_to_recieve -= 1
 
             img = cv2.imread(current_file)
+            cols, rows, ch = img.shape
+
+            M = cv2.getRotationMatrix2D((cols / 2, rows / 2), random.randint(-20, 20), 1)
+            rot_img = cv2.warpAffine(img, M, (cols, rows))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            rot_img = cv2.cvtColor(rot_img, cv2.COLOR_BGR2RGB)
             # TODO: pass save parameter
             if self.image_callback.__name__ == add_user_photo_callback.__name__:
                 self.callback_args["photos"] = photos_to_recieve
             elif self.image_callback.__name__ == authorize_user.__name__:
                 self.callback_args["photo_attempts"] -= 1
-            socket_status = self.image_callback(img, self.client_socket, **self.callback_args)
-            os.remove(current_file)
-
-        if os.path.exists(current_file):
-            os.remove(current_file)
+            img_result = self.image_callback(img, self.client_socket, **self.callback_args)
+            rot_result = self.image_callback(rot_img, self.client_socket, **self.callback_args)
+            socket_status = ClientThreadResponse.COUNTINUE_LISTENING if img_result == rot_result == ClientThreadResponse.COUNTINUE_LISTENING else ClientThreadResponse.CLOSE_SOCKET
+            print()
+        #     os.remove(current_file)
+        #
+        # if os.path.exists(current_file):
+        #     os.remove(current_file)
 
         self.client_socket.send(Constants.successful_response.encode())
         print("ClientThread: Done")

@@ -2,12 +2,13 @@ import socket as sk
 import sys
 
 import ServerToRasp
+from NeuralNets.FaceRecognition.Recognition import TrainingThread
 from SocketThread import SocketThread
 
 ip_address = ""
-serversocket_port = 8883
+serversocket_port = 8887
 rasp_ip = "192.168.43.26"
-rasp_sender_port = 34563
+rasp_sender_port = 34567
 
 serversocket = None
 rasp_socket = None
@@ -19,16 +20,16 @@ def main():
     serversocket.bind((ip_address, serversocket_port))
     serversocket.listen(10)
 
-    # rasp_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
-    # rasp_socket.bind((ip_address, rasp_sender_port))
-    # rasp_socket.listen(1)
-    #
-    # # Raspberry connecting listener thread
-    # print("Waiting for Raspberry listener thread...")
-    # socket, address = rasp_socket.accept()
-    # print("Starting Raspberry socket")
-    # SocketThread(socket, address, serve_forever=True)
-    # ServerToRasp.set_rasp_socket(socket)
+    rasp_socket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)
+    rasp_socket.bind((ip_address, rasp_sender_port))
+    rasp_socket.listen(1)
+
+    # Raspberry connecting listener thread
+    print("Waiting for Raspberry listener thread...")
+    socket, address = rasp_socket.accept()
+    print("Starting Raspberry socket")
+    SocketThread(socket, address, serve_forever=True)
+    ServerToRasp.set_rasp_socket(socket)
 
     print("Server started")
 
@@ -44,18 +45,18 @@ def main():
 
 
 if __name__ == "__main__":
-    if (sys.argv) != 0:
+    if len(sys.argv) != 1:
         args = sys.argv[1:]
-        from NeuralNets.FaceRecognition.Recognition import load_model
         if args[0].lower() == "recognition":
             if args[1].lower() == "trainclf":
-                load_model()
+                TrainingThread()
 
         elif args[0].lower() == "database":
             from Database.Database import parse_args
             parse_args(args[1:])
     else:
         try:
+            TrainingThread()
             main()
         except KeyboardInterrupt:
             print("Shutting down, cleaning socket")

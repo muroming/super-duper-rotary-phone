@@ -149,6 +149,7 @@ def toggle_item_power(id):
     cursor = con.cursor()
     cursor.execute(FIND_HOME_ITEM_BY_ID, (id,))
     id, name, is_on, desc, photo = cursor.fetchone()
+
     if is_on == 0:
         print("Turning", name, "on")
         cursor.execute(UPDATE_ITEM_POWER_BY_ID, (1, id))
@@ -156,6 +157,8 @@ def toggle_item_power(id):
         print("Turning", name, "off")
         cursor.execute(UPDATE_ITEM_POWER_BY_ID, (0, id))
     con.commit()
+
+    return not bool(is_on)
 
 
 def get_user_home_items(user_login):
@@ -278,3 +281,7 @@ def parse_args(args):
             insert(INSERT_HOME_ITEM, tuple(args[2:]))
         elif args[1].lower() == "user":
             insert(INSERT_USER, tuple(args[2:]))
+
+
+if __name__ == "__main__":
+    parse_args(sys.argv[1:])

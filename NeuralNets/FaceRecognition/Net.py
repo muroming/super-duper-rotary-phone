@@ -1,11 +1,8 @@
-import os
-
 import numpy as np
 import tensorflow as tf
 import tensorflow_probability as tfp
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.layers import (Add, BatchNormalization, Dropout, Flatten,
-                                     Input, MaxPooling2D)
+from tensorflow.keras.layers import BatchNormalization, Dropout, Input
 from tensorflow.keras.models import Model
 
 np.random.seed(10)
@@ -14,7 +11,7 @@ tf.set_random_seed(10)
 
 class BayesianModel(object):
     def __init__(self, input_shape, output_shape, n_persons, predict_threshold, batch_size=32, n_iter_train=70,
-                 n_iter_predict=200, test_size=.3, label_names=None, model_path=None, input_dtype=tf.float32, output_dtype=tf.int32):
+                 n_iter_predict=200, test_size=.3, label_names=None, input_dtype=tf.float32, output_dtype=tf.int32):
         tf.reset_default_graph()
 
         self.session = tf.Session()
@@ -31,17 +28,6 @@ class BayesianModel(object):
         self.test_size = test_size
         self.predict_threshold = predict_threshold
 
-        # if model_path is not None and os.path.exists(model_path):
-        #     saver = tf.train.Saver()
-        #     saver.restore(self.session, model_path)
-        #     print("Model loaded")
-
-    # def save_model(self, path):
-        # saver = tf.train.Saver()
-        # saved_path = saver.save(self.session, path)
-        #
-        # print("Saved to", saved_path)
-
     def predict(self, X):
         res = []
         for _ in range(self.n_iter_predict):
@@ -56,7 +42,12 @@ class BayesianModel(object):
             return ""
 
         if self.label_names is not None:
-            return self.label_names[max_ind]
+            name = self.label_names[max_ind]
+
+            if name != "mock":
+                return name
+            else:
+                return ""
 
         return max_ind
 

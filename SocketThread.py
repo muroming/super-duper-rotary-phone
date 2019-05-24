@@ -87,8 +87,12 @@ def validate_user(client_socket):
 def toggle_item_power(client_socket):
     print("Toggling")
     id = remove_string_fillers(client_socket.recv(1024).decode())
-    is_succ = ClientSessions.toggle_item_power(id)
-    print("Toggling", is_succ)
+    is_succ, new_state = ClientSessions.toggle_item_power(id)
+    if new_state:   # Itemed turned on
+        ServerToRasp.turn_item_on(id)
+    else:
+        ServerToRasp.turn_item_off(id)
+
     if (is_succ):
         client_socket.send(Constants.successful_response.encode())
     else:

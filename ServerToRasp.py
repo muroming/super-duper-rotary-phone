@@ -1,7 +1,6 @@
 import random
 
-from Client import ClientThreadCallbacks
-from StringUtils import *
+from StringUtils import fill_string
 
 raps_socket = None
 
@@ -20,3 +19,15 @@ def fetch_home_info():
 def set_rasp_socket(socket):
     global raps_socket
     raps_socket = socket
+
+
+def turn_item_on(item_id):
+    print("Turning on item with id", item_id)
+    raps_socket.send("3".encode())
+    raps_socket.send(fill_string(item_id, 1024).encode())
+
+
+def turn_item_off(item_id):
+    print("Turning off item with id", item_id)
+    raps_socket.send("4".encode())
+    raps_socket.send(fill_string(item_id, 1024).encode())

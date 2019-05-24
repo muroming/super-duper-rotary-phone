@@ -1,4 +1,5 @@
 import os
+import pickle
 from threading import Thread
 
 import face_recognition
@@ -12,7 +13,7 @@ x_placeholder = None
 model_probs = None
 face_detector = None
 
-model_path = "./NeuralNets/FaceRecognition/fc_model.ckpt"
+model_path = "./NeuralNets/FaceRecognition/fc_model.pickle"
 encodings_path = "./NeuralNets/FaceRecognition/encodings"
 dataset_path = "/home/muroming/PythonProjects/SmartHouse/NeuralNets/FaceRecognition/dataset"
 face_cv_path = "./NeuralNets/FaceRecognition/%s"
@@ -24,7 +25,7 @@ batch_size = 32
 neural_net_input_shape = [300, 300]
 n_iters_predict = 500
 n_iters_train = int(person_faces_amount / batch_size * 3)
-predict_threshold = 0.65
+predict_threshold = 0.45
 
 
 class TrainingThread(Thread):
@@ -35,6 +36,7 @@ class TrainingThread(Thread):
 
     def run(self):
         try:
+            load_model()
             train_classifier()
         except Exception as e:
             print("Training failed with exception")
@@ -44,14 +46,29 @@ class TrainingThread(Thread):
 def load_model():
     global model
     load_names()
-    model = BayesianModel([None, 128], [None], len(names), predict_threshold, n_iter_train=n_iters_train,
-                          n_iter_predict=n_iters_predict, model_path=model_path, label_names=names)
-    print("Model created")
-    TrainingThread()
+
+    if os.path.exists(model_path):
+        print("Loading model")
+        with open(model_path, "rb") as f:
+            model = pickle.load(f)
+
+        print("Model loaded")
+    else:
+        print("No model found creating")
+        model = BayesianModel([None, 128], [None], len(names), predict_threshold, n_iter_train=n_iters_train,
+                              n_iter_predict=n_iters_predict, label_names=names)
+        print("Model created")
+
+
+def save_model(): pass
+# with open(model_path, "wb") as f:
+#     pickle.dump(model, f)
+#     print("Model saved")
 
 
 def train_model(number_persons, X_data, y_data):
     model.fit(X_data, y_data)
+    save_model()
 
 
 def extract_face_from_image(image):
@@ -130,9 +147,7 @@ def save_person_encodings(encodings, name):
 
 def load_names():
     global names
-    removes = ["testfaces", "sha"]
-    names = [name for name in os.listdir(
-        dataset_path) if name not in removes and not ".npy" in name]
+    names = [name for name in os.listdir(dataset_path)]
 
     print("Names loaded", names)
 
@@ -147,15 +162,13 @@ def person_id_to_bin(y):
 
 
 def train_classifier():
-    if len(names) == 0:
-        print("Loading names")
-        load_names()
+    load_names()
 
     if len(names) <= 1:
         print("Can't train on %d person" % len(names))
         return
 
-    print("Getting images")
+    print("Getting encodings")
     x_path = os.path.join(dataset_path, "X.npy")
     y_path = os.path.join(dataset_path, "y.npy")
 
@@ -165,15 +178,9 @@ def train_classifier():
         X, y = [], []
         persons = 0
         for person in names:
-            person_path = os.path.join(dataset_path, person)
-            for i, image in enumerate(os.listdir(person_path)):
-                print(person, i)
-                if i == person_faces_amount:
-                    break
-                img = cv2.imread(os.path.join(person_path, image))
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                enc = face_recognition.face_encodings(img, [(0, img.shape[1], img.shape[0], 0)])
-                enc = np.array(enc).reshape((128,))
+            person_path = os.path.join(dataset_path, person, "%s.npy" % person)
+            person_encodings = np.load(person_path)
+            for enc in person_encodings:
                 X.append(enc)
                 y.append(persons)
 
@@ -182,40 +189,30 @@ def train_classifier():
         X = np.array(X)
         y = person_id_to_bin(y)
 
-        np.save(dataset_path + "/X.npy", X)
-        np.save(dataset_path + "/y.npy", y)
-
-    print(X.shape, y.shape)
-    print(y)
+        print(X, y)
 
     print("Training model")
     train_model(len(names), X, y)
 
 
 def validate_person(image, detection_type=0):  # Assuming image is RGB
-    if model is None:
-        load_model()
+    encoding = extract_face_enc_from_image(image)
 
-    encoding = extract_face_from_image(image)
-
-    if len(encoding) == 0:
+    if encoding is None or len(encoding) == 0:
         print("Face not found")
         return ""
+
     encoding = np.array(encoding[0]).reshape((1, 128))
 
     print(encoding.shape)
+
+    if model is None:
+        load_model()
+
+    if model is None or names is None or (len(names) == 1 and "mock" in names):
+        print("No users registered")
+        return ""
+
     predict = model.predict(encoding)
 
     return predict
-
-
-# load_model()
-#
-# img = cv2.imread(os.path.join(dataset_path, "nik", "nik935rot.jpg"))
-# enc = face_recognition.face_encodings(img, [(0, img.shape[1], img.shape[0], 0)])
-# enc = np.array(enc).reshape((128,))
-# model.predict([enc])
-#
-# img = cv2.imread(os.path.join(dataset_path, "sha", "sha0rot.jpg"))
-# enc = extract_face_enc_from_image(img)
-# model.predict(enc)

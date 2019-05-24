@@ -22,11 +22,11 @@ def logout_user(login, password):
 
 def toggle_item_power(id):
     try:
-        Database.toggle_item_power(id)
-        return True
+        new_state = Database.toggle_item_power(id)
+        return True, new_state
     except Exception as e:
         print("Error while toggling", e)
-        return False
+        return False, False
 
 
 def create_user(name, login, password):
