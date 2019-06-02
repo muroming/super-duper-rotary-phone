@@ -1,5 +1,6 @@
 import base64
 import os
+import random
 import uuid
 from threading import Thread
 
@@ -50,6 +51,7 @@ class ClientThread(Thread):
             print("Expected img_size:", img_size)
 
             current_file = os.path.join(".", cache_folder, "%s.jpg" % str(uuid.uuid4()))
+
             image = open(current_file, 'wb')
             data = b""
             while len(data) != img_size:

@@ -11,31 +11,21 @@ from NeuralNets.FaceRecognition.Recognition import person_faces_amount
 from StringUtils import remove_string_fillers
 
 
-def fetch_home_info(client_socket):
+def fetch_home_info():
     print("Fething home data from Raspberry")
     data = ServerToRasp.fetch_home_info()
-    if len(data) == 0:
-        data = Constants.error_response + data
-    else:
-        data = Constants.successful_response + data
-    client_socket.send(data.encode())
+    return data
 
 
-def fetch_avaliable_home_items(client_socket):
-    login = remove_string_fillers(client_socket.recv(1024).decode())
+def fetch_avaliable_home_items(login):
     print("Fetching avaliable items for user", login)
     items = ClientSessions.fetch_user_items(login)
     items = json.dumps(items, default=lambda x: x.__dict__)
 
-    if len(items) != 0:
-        items = Constants.successful_response + items
-    else:
-        items = Constants.error_response
-
     if Constants.is_debug:
         print(items)
 
-    client_socket.send(items.encode())
+    return items
 
 
 def add_photos(client_socket):
@@ -46,27 +36,19 @@ def add_photos(client_socket):
     return ClientThread(client_socket, ClientThreadCallbacks.add_user_photo_callback, username=username)
 
 
-def create_user(client_socket):
-    print("Creating user")
-    user_data = remove_string_fillers(client_socket.recv(1024).decode())
-    print(user_data)
-    user_name, user_login, user_password = user_data.split(" ")
+def create_user(user_name, user_login, user_password):
+    print("Creating user", user_name, user_login, user_password)
     try:
         user = ClientSessions.create_user(user_name, user_login, user_password)
-        client_socket.send(Constants.successful_response.encode()
-                           if user is not None else Constants.error_response.encode())
-    except IndentationError:
-        client_socket.send(Constants.user_already_exists.encode())
+        return '', 200 if user is not None else 'Internal error', 500
+    except IntegrityError:
+        return Constants.user_already_exists, 500
 
 
-def login_user(client_socket):
-    print("Logining user")
-    user_data = remove_string_fillers(client_socket.recv(1024).decode())
-    print(user_data)
-    user_login, user_password = user_data.split(" ")
+def login_user(user_login, user_password):
+    print("Logining user:", user_login, user_password)
     user = ClientSessions.login_user(user_login, user_password)
-    client_socket.send(Constants.successful_response.encode()
-                       if user is not None else Constants.error_response.encode())
+    return Constants.successful_response if user is not None else Constants.error_response
 
 
 def logout_user(client_socket):
