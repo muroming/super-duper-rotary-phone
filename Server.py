@@ -1,9 +1,11 @@
 import socket as sk
 import sys
 
+from flask import Flask, request
+
+import HttpActions
 import ServerToRasp
 from NeuralNets.FaceRecognition.Recognition import TrainingThread
-from SocketThread import SocketThread
 
 ip_address = ""
 serversocket_port = 8887
@@ -12,6 +14,20 @@ rasp_sender_port = 34567
 
 serversocket = None
 rasp_socket = None
+
+app = Flask(__name__)
+
+
+@app.route("/", methods=["GET", "POST"])
+def main_test_page():
+    return "test page"
+
+
+@app.route("/login", methods=["GET"])
+def login_user():
+    user_login = request.args["user_login"]
+    user_password = request.args["user_password"]
+    return HttpActions.login_user(user_login, user_password)
 
 
 def main():
@@ -56,8 +72,9 @@ if __name__ == "__main__":
             parse_args(args[1:])
     else:
         try:
-            TrainingThread()
-            main()
+            # TrainingThread()
+            app.run(debug=True)
+            # main()
         except KeyboardInterrupt:
             print("Shutting down, cleaning socket")
             if serversocket is not None:

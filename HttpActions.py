@@ -59,14 +59,10 @@ def create_user(client_socket):
         client_socket.send(Constants.user_already_exists.encode())
 
 
-def login_user(client_socket):
-    print("Logining user")
-    user_data = remove_string_fillers(client_socket.recv(1024).decode())
-    print(user_data)
-    user_login, user_password = user_data.split(" ")
+def login_user(user_login, user_password):
+    print("Logining user:", user_login, user_password)
     user = ClientSessions.login_user(user_login, user_password)
-    client_socket.send(Constants.successful_response.encode()
-                       if user is not None else Constants.error_response.encode())
+    return Constants.successful_response if user is not None else Constants.error_response
 
 
 def logout_user(client_socket):
