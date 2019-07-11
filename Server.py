@@ -50,6 +50,19 @@ def create_user():
     return HttpActions.create_user(user_name, user_login, user_password)
 
 
+@app.route("/toggle_item_power", methods=["POST"])
+def toggle_item_power():
+    item_id = request.args["item_id"]
+    return HttpActions.toggle_item_power(item_id)
+
+
+@app.route("/logout", methods=["POST"])
+def logout_user():
+    user_login = request.args["user_login"]
+    user_password = request.args["user_password"]
+    return HttpActions.logout_user(user_login, user_password)
+
+
 def main():
     global serversocket, rasp_socket
     serversocket = sk.socket(sk.AF_INET, sk.SOCK_STREAM)

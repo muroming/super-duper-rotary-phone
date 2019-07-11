@@ -51,14 +51,10 @@ def login_user(user_login, user_password):
     return Constants.successful_response if user is not None else Constants.error_response
 
 
-def logout_user(client_socket):
+def logout_user(user_login, user_password):
     print("Login out user")
-    user_data = remove_string_fillers(client_socket.recv(1024).decode())
-    print(user_data)
-    user_login, user_password = user_data.split(" ")
     user = ClientSessions.logout_user(user_login, user_password)
-    client_socket.send(Constants.successful_response.encode()
-                       if user is not None else Constants.error_response.encode())
+    return Constants.successful_response if user is not None else Constants.error_response
 
 
 def validate_user(client_socket):
@@ -66,19 +62,15 @@ def validate_user(client_socket):
     return ClientThread(client_socket, ClientThreadCallbacks.authorize_user, photo_attempts=6)
 
 
-def toggle_item_power(client_socket):
+def toggle_item_power(id):
     print("Toggling")
-    id = remove_string_fillers(client_socket.recv(1024).decode())
     is_succ, new_state = ClientSessions.toggle_item_power(id)
     if new_state:   # Itemed turned on
         ServerToRasp.turn_item_on(id)
     else:
         ServerToRasp.turn_item_off(id)
 
-    if (is_succ):
-        client_socket.send(Constants.successful_response.encode())
-    else:
-        client_socket.send(Constants.error_response.encode())
+    return Constants.successful_response if is_succ else Constants.error_response
 
 
 # Actions
