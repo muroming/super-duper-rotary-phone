@@ -23,12 +23,17 @@ def main_test_page():
     return "test page"
 
 
+<<<<<<< HEAD
 @app.route("/login", methods=["POST"])
+=======
+@app.route("/login", methods=["GET"])
+>>>>>>> 34f7428510884101ac7e997ccd93256be4ebccd1
 def login_user():
     user_login = request.args["user_login"]
     user_password = request.args["user_password"]
     return HttpActions.login_user(user_login, user_password)
 
+<<<<<<< HEAD
 
 @app.route("/home_info", methods=["GET"])
 def fetch_home_info():
@@ -62,6 +67,8 @@ def logout_user():
     user_password = request.args["user_password"]
     return HttpActions.logout_user(user_login, user_password)
 
+=======
+>>>>>>> 34f7428510884101ac7e997ccd93256be4ebccd1
 
 def main():
     global serversocket, rasp_socket
